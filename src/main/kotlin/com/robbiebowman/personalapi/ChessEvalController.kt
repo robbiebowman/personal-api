@@ -23,9 +23,9 @@ import kotlin.random.Random
 @RestController
 class ChessEvalController {
 
-    val numChessEvalLines = 451561
+    val numChessEvalLines = 100_000
 
-    enum class Difficulties{
+    enum class Difficulties {
         Easy, Medium, Hard
     }
 
@@ -37,7 +37,13 @@ class ChessEvalController {
     ): ChessEvaluation {
         val lineNum = Random.nextInt(numChessEvalLines)
         var text: String
-        Files.lines(Paths.get(ClassLoader.getSystemResource("static/fen-evals.csv").toURI())).use { lines -> text = lines.skip(lineNum.toLong()).findFirst().get() }
+        val file = when(difficulty) {
+            Difficulties.Easy -> "static/chess/easy-puzzles.csv"
+            Difficulties.Medium, null -> "static/chess/medium-puzzles.csv"
+            Difficulties.Hard -> "static/chess/hard-puzzles.csv"
+        }
+        Files.lines(Paths.get(ClassLoader.getSystemResource(file).toURI()))
+            .use { lines -> text = lines.skip(lineNum.toLong()).findFirst().get() }
         val line = csvReader().readAll(text).first()
         return ChessEvaluation(line[0], line[1])
     }

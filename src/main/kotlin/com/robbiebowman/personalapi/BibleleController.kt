@@ -1,23 +1,13 @@
 package com.robbiebowman.personalapi
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
-import com.robbiebowman.wordle.SolverEngine
-import com.robbiebowman.wordle.Suggestion
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
-import java.io.File
-import java.io.InputStream
-
-import org.springframework.core.io.ClassPathResource
-import org.springframework.core.io.Resource
 import org.springframework.web.bind.annotation.PathVariable
-import java.lang.NumberFormatException
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import java.nio.file.Files
 import java.nio.file.Paths
-import org.springframework.http.HttpStatus
-
-import org.springframework.web.server.ResponseStatusException
 
 @RestController
 class BibleleController {
