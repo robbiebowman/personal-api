@@ -18,7 +18,15 @@ import java.nio.file.Paths
 import org.springframework.http.HttpStatus
 
 import org.springframework.web.server.ResponseStatusException
+import java.net.URI
+import java.nio.file.Path
 import kotlin.random.Random
+import java.util.Collections
+
+import java.nio.file.FileSystems
+
+
+
 
 @RestController
 class ChessEvalController {
@@ -32,7 +40,7 @@ class ChessEvalController {
     data class ChessEvaluation(val fen: String, val evaluation: String)
 
     @GetMapping("/chess-evals")
-    fun biblele(
+    fun getRandomChessEvaluations(
         @RequestParam("difficulty") difficulty: Difficulties? = Difficulties.Medium
     ): ChessEvaluation {
         val lineNum = Random.nextInt(numChessEvalLines)
@@ -42,7 +50,15 @@ class ChessEvalController {
             Difficulties.Medium, null -> "static/chess/medium-puzzles.csv"
             Difficulties.Hard -> "static/chess/hard-puzzles.csv"
         }
-        Files.lines(Paths.get(ClassLoader.getSystemResource(file).toURI()))
+        val resource: Resource = ClassPathResource("/")
+        val runningFromJar = resource.uri.scheme.equals("jar")
+        val path = if (runningFromJar){
+            val fs = FileSystems.newFileSystem(resource.uri, emptyMap<String, Any>())
+            fs.getPath("/BOOT-INF/classes/$file")
+        } else {
+            Paths.get(ClassLoader.getSystemResource(file).toURI())
+        }
+        Files.lines(path)
             .use { lines -> text = lines.skip(lineNum.toLong()).findFirst().get() }
         val line = csvReader().readAll(text).first()
         return ChessEvaluation(line[0], line[1])
