@@ -51,12 +51,12 @@ class ChessEvalController {
             Difficulties.Hard -> "static/chess/hard-puzzles.csv"
         }
         val resource: Resource = ClassPathResource("/")
-        val runningFromJar = resource.uri.scheme.equals("jar")
-        val path = if (runningFromJar){
+        val runningLocally = resource.uri.scheme.equals("file")
+        val path = if (runningLocally){
+            Paths.get(ClassLoader.getSystemResource(file).toURI())
+        } else {
             val fs = FileSystems.newFileSystem(resource.uri, emptyMap<String, Any>())
             fs.getPath("/BOOT-INF/classes/$file")
-        } else {
-            Paths.get(ClassLoader.getSystemResource(file).toURI())
         }
         Files.lines(path)
             .use { lines -> text = lines.skip(lineNum.toLong()).findFirst().get() }
