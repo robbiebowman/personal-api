@@ -27,4 +27,4 @@ jobs:
         with:
           app-name: spring-petclinic
           publish-profile: ${{ secrets.azureWebAppPublishProfile }} # See https://github.com/Azure/actions-workflow-samples/tree/master/AppService
-          package: '${{ github.workspace }}/target/*.jar'
+          package: '${{ github.workspace }}/build/libs/*.jar'
