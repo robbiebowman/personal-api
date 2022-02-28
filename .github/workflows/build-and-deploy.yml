@@ -22,7 +22,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew bootJar
       - uses: azure/webapps-deploy@v1
         with:
           app-name: spring-petclinic
