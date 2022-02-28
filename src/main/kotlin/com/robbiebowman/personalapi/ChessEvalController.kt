@@ -52,12 +52,9 @@ class ChessEvalController {
         }
         val resource: Resource = ClassPathResource("/")
         val runningLocally = resource.uri.scheme.equals("file")
-        val path = if (runningLocally){
-            Paths.get(ClassLoader.getSystemResource(file).toURI())
-        } else {
-            val fs = FileSystems.newFileSystem(resource.uri, emptyMap<String, Any>())
+        val fs = FileSystems.newFileSystem(resource.uri, emptyMap<String, Any>())
+        val path =
             fs.getPath("/BOOT-INF/classes/$file")
-        }
         Files.lines(path)
             .use { lines -> text = lines.skip(lineNum.toLong()).findFirst().get() }
         val line = csvReader().readAll(text).first()
