@@ -46,15 +46,12 @@ class ChessEvalController {
         val lineNum = Random.nextInt(numChessEvalLines)
         var text: String
         val file = when(difficulty) {
-            Difficulties.Easy -> "static/chess/easy-puzzles.csv"
-            Difficulties.Medium, null -> "static/chess/medium-puzzles.csv"
-            Difficulties.Hard -> "static/chess/hard-puzzles.csv"
+            Difficulties.Easy -> "/static/chess/easy-puzzles.csv"
+            Difficulties.Medium, null -> "/static/chess/medium-puzzles.csv"
+            Difficulties.Hard -> "/static/chess/hard-puzzles.csv"
         }
-        val resource: Resource = ClassPathResource("/")
-        val runningLocally = resource.uri.scheme.equals("file")
-        val fs = FileSystems.newFileSystem(resource.uri, emptyMap<String, Any>())
-        val path =
-            fs.getPath("/BOOT-INF/classes/$file")
+        val resource = this.javaClass.getResource(file)
+        val path = Paths.get(resource.toURI())
         Files.lines(path)
             .use { lines -> text = lines.skip(lineNum.toLong()).findFirst().get() }
         val line = csvReader().readAll(text).first()
