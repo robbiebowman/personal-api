@@ -1,36 +1,24 @@
 package com.robbiebowman.personalapi
 
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
-import com.robbiebowman.wordle.SolverEngine
-import com.robbiebowman.wordle.Suggestion
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-
-import org.springframework.core.io.ClassPathResource
-import org.springframework.core.io.Resource
-import org.springframework.web.bind.annotation.PathVariable
-import java.lang.NumberFormatException
-import java.nio.file.Files
-import java.nio.file.Paths
-import org.springframework.http.HttpStatus
-
-import org.springframework.web.server.ResponseStatusException
-import java.net.URI
-import java.nio.file.Path
-import kotlin.random.Random
-import java.util.Collections
-
-import java.nio.file.FileSystems
-
-import org.springframework.util.ResourceUtils
 import java.io.*
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalUnit
+import kotlin.random.Random
 
 
 @RestController
 class ChessEvalController {
 
     val numChessEvalLines = 100_000
+
+    @Value("\${chessdailyseed}")
+    private val chessDailySeed: String? = null
 
     enum class Difficulties {
         Easy, Medium, Hard
@@ -43,7 +31,33 @@ class ChessEvalController {
         @RequestParam("difficulty") difficulty: Difficulties? = Difficulties.Medium
     ): ChessEvaluation {
         val lineNum = Random.nextInt(numChessEvalLines)
-        var text: String
+        val filePath = when(difficulty) {
+            Difficulties.Easy -> "static/chess/easy-puzzles.csv"
+            Difficulties.Medium, null -> "static/chess/medium-puzzles.csv"
+            Difficulties.Hard -> "static/chess/hard-puzzles.csv"
+        }
+        val reader = BufferedReader(InputStreamReader(this.javaClass.classLoader.getResourceAsStream(filePath)!!))
+        for (i in (1..lineNum)) {
+            reader.readLine()
+        }
+        val line = csvReader().readAll(reader.readLine()).first()
+        return ChessEvaluation(line[0], line[1])
+    }
+
+    @GetMapping("/chess-evals/daily")
+    fun getDailyChessEvaluations(
+        @RequestParam("day") dayInput: Int?,
+        @RequestParam("month") monthInput: Int?,
+        @RequestParam("difficulty") difficulty: Difficulties? = Difficulties.Medium
+    ): ChessEvaluation {
+        val today = LocalDate.now()
+        val day = dayInput ?: today.dayOfMonth
+        val month = monthInput ?: today.monthValue
+        val inputDate = LocalDate.of(today.year, month, day)
+        val isValid = inputDate.minus(2, ChronoUnit.DAYS).isBefore(today) && inputDate.plus(2, ChronoUnit.DAYS).isAfter(today)
+        val date = if (isValid) inputDate else today
+        val seed = chessDailySeed?.trim()?.toLong() ?: 0
+        val lineNum = Random(date.toEpochDay() + seed).nextInt(numChessEvalLines)
         val filePath = when(difficulty) {
             Difficulties.Easy -> "static/chess/easy-puzzles.csv"
             Difficulties.Medium, null -> "static/chess/medium-puzzles.csv"
