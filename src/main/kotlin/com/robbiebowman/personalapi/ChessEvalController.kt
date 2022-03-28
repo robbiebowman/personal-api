@@ -20,6 +20,8 @@ class ChessEvalController {
     @Value("\${chessdailyseed}")
     private val chessDailySeed: String? = null
 
+    private val csv = csvReader()
+
     enum class Difficulties {
         Easy, Medium, Hard
     }
@@ -36,11 +38,13 @@ class ChessEvalController {
             Difficulties.Medium, null -> "static/chess/medium-puzzles.csv"
             Difficulties.Hard -> "static/chess/hard-puzzles.csv"
         }
-        val reader = BufferedReader(InputStreamReader(this.javaClass.classLoader.getResourceAsStream(filePath)!!))
+        val streamReader = InputStreamReader(this.javaClass.classLoader.getResourceAsStream(filePath)!!)
+        val reader = BufferedReader(streamReader)
         for (i in (1..lineNum)) {
             reader.readLine()
         }
-        val line = csvReader().readAll(reader.readLine()).first()
+        val line = csv.readAll(reader.readLine()).first()
+        streamReader.close()
         return ChessEvaluation(line[0], line[1])
     }
 
@@ -67,7 +71,7 @@ class ChessEvalController {
         for (i in (1..lineNum)) {
             reader.readLine()
         }
-        val line = csvReader().readAll(reader.readLine()).first()
+        val line = csv.readAll(reader.readLine()).first()
         return ChessEvaluation(line[0], line[1])
     }
 }
