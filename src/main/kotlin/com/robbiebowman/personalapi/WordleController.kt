@@ -1,15 +1,20 @@
 package com.robbiebowman.personalapi
 
 import com.robbiebowman.wordle.SolverEngine
-import com.robbiebowman.wordle.Suggestion
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
+
 
 @RestController
 class WordleController {
 
-    data class ApiSuggestion(val bestGuess: String, val someRemainingAnswers: List<String>, val remainingAnswerCount: Int)
+    data class ApiSuggestion(
+        val bestGuess: String,
+        val someRemainingAnswers: List<String>,
+        val remainingAnswerCount: Int
+    )
+
     private val solver = SolverEngine()
 
     @GetMapping("/wordle")
@@ -20,5 +25,15 @@ class WordleController {
     ): ApiSuggestion {
         val bestGuess = solver.getSuggestion(guesses, results, hardMode)
         return ApiSuggestion(bestGuess.word, bestGuess.possibleAnswers.take(20), bestGuess.possibleAnswers.size)
+    }
+
+    @ExceptionHandler(NoSuchElementException::class)
+    @ResponseStatus(HttpStatus.NOT_FOUND, code = HttpStatus.NOT_FOUND)
+    fun handleNoSuchElementFoundException(
+        exception: NoSuchElementException
+    ): ResponseEntity<String?>? {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(exception.message)
     }
 }
