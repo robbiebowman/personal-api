@@ -11,4 +11,6 @@ RUN mkdir /app
 
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/spring-boot-application.jar
 ENV CHESS_DAILY_SEED=$CHESS_DAILY_SEED
+ENV SLACK_TOKEN=$SLACK_TOKEN
+ENV OPEN_API_KEY=$OPEN_API_KEY
 ENTRYPOINT ["java", "-jar", "/app/spring-boot-application.jar"]
