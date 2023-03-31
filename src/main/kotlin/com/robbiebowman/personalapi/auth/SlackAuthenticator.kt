@@ -24,8 +24,7 @@ object SlackAuthenticator {
         if (abs(now - timestamp) > 60 * 5) throw Exception() // Replay attack or clock desync
         println("Time good")
 
-        val body = String(httpRequest.inputStream.readAllBytes(), StandardCharsets.UTF_8)
-        val toHash = "v0:$timestamp:$body"
+        val toHash = "v0:$timestamp:$rawBody"
         val hash = mac.doFinal(toHash.toByteArray()).joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
         val key = "v0=$hash"
 
