@@ -44,6 +44,7 @@ class SummariseController {
         println("Got headers: X-Slack-Signature: ${httpEntity.headers["X-Slack-Signature"]}")
         println("Got a body: ${httpEntity.body!!}")
         authenticate(slackSigningSecret!!, httpRequest, httpEntity.body!!)
+        println("Authenticated successfully!")
         val client: MethodsClient = slack.methods(slackToken)
         val messages = getMessagesSinceTime(client, channel = "CPDA1JJQ3", since = Instant.ofEpochSecond(1679981897L))
         val users = getUserToNameMap(client, messages)
