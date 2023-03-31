@@ -30,6 +30,7 @@ dependencies {
 	implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.2.0")
 
 	implementation("com.slack.api:slack-api-client:1.28.1")
+	implementation("com.slack.api:bolt:1.28.1")
 
 	implementation("com.theokanning.openai-gpt3-java:service:0.11.1")
 
