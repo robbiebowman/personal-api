@@ -12,11 +12,8 @@ import kotlin.math.abs
 
 object SlackAuthenticator {
 
-    @Value("\${SLACK_SIGNING_SECRET}")
-    private val slackSigningSecret: String? = null
-
-    fun authenticate(httpRequest: HttpServletRequest, rawBody: String) {
-        val secretKeySpec = SecretKeySpec(slackSigningSecret!!.toByteArray(), "HmacSHA256")
+    fun authenticate(slackSigningSecret: String, httpRequest: HttpServletRequest, rawBody: String) {
+        val secretKeySpec = SecretKeySpec(slackSigningSecret.toByteArray(), "HmacSHA256")
         val mac: Mac = Mac.getInstance("HmacSHA256")
         mac.init(secretKeySpec)
 

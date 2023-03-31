@@ -28,6 +28,9 @@ class SummariseController {
     @Value("\${OPEN_API_KEY}")
     private val openApiKey: String? = null
 
+    @Value("\${SLACK_SIGNING_SECRET}")
+    private val slackSigningSecret: String? = null
+
     private val slack = Slack.getInstance()
 
     @PostMapping("/summarise", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
@@ -40,7 +43,7 @@ class SummariseController {
         println("Got headers: X-Slack-Request-Timestamp: ${httpEntity.headers["X-Slack-Request-Timestamp"]}")
         println("Got headers: X-Slack-Signature: ${httpEntity.headers["X-Slack-Signature"]}")
         println("Got a body: ${httpEntity.body!!}")
-        authenticate(httpRequest, httpEntity.body!!)
+        authenticate(slackSigningSecret!!, httpRequest, httpEntity.body!!)
         val client: MethodsClient = slack.methods(slackToken)
         val messages = getMessagesSinceTime(client, channel = "CPDA1JJQ3", since = Instant.ofEpochSecond(1679981897L))
         val users = getUserToNameMap(client, messages)
