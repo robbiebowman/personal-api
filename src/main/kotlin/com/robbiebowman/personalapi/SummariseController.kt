@@ -43,27 +43,35 @@ class SummariseController {
         // Authenticate request
         val timestamp = httpRequest.getHeader("X-Slack-Request-Timestamp").toLong()
         val signature = httpRequest.getHeader("X-Slack-Signature")
+        println("Attempting auth")
         authenticate(slackSigningSecret!!, signature, timestamp, httpEntity.body!!)
+        println("Auth success")
 
         // Get relevant form fields
+        println("Getting form fields")
         val channel = params["channel_id"]!!.first()
         val requestingUser = params["user_id"]!!.first()
+        println("Form fields successfully retrieved")
 
         val client = slack.methods(slackToken)
         val messages = getMessagesSinceTime(client, channel = channel, since = Instant.ofEpochSecond(1679981897L))
         val users = getUserToNameMap(client, messages)
         val formattedMessages = getFormattedMessages(messages, users)
         val gpt = OpenAiService(openApiKey)
+        println("Getting summary")
         val summary = getSummary(gpt, formattedMessages)
+        println("Summary gotten")
 
+        println("Posting summary: channel=$channel, user=$requestingUser")
         val request =
             ChatPostEphemeralRequest.builder().channel(channel)
                 .text(summary).user(requestingUser).build()
         client.chatPostEphemeral(request)
+        println("Posted!")
     }
 
     private fun getSummary(gpt: OpenAiService, formattedMessages: String): String {
-        val completionRequest = ChatCompletionRequest.builder().model("gpt-4-32k").messages(
+        val completionRequest = ChatCompletionRequest.builder().model("gpt-4").messages(
             listOf(
                 ChatMessage("system", "You are a helpful assistant, helping someone get a summary of the messages they've missed."),
                 ChatMessage(
