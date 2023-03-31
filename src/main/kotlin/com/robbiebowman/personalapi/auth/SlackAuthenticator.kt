@@ -19,7 +19,7 @@ object SlackAuthenticator {
 
         val timestamp = httpRequest.getHeader("X-Slack-Request-Timestamp").toLong()
         val signature = httpRequest.getHeader("X-Slack-Signature")
-        val now = Instant.now().toEpochMilli()
+        val now = Instant.now().toEpochMilli()/1000
         println("About to check time")
         if (abs(now - timestamp) > 60 * 5) throw Exception() // Replay attack or clock desync
         println("Time good")
