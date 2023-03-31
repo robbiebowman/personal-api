@@ -37,6 +37,8 @@ class SummariseController {
         httpRequest: HttpServletRequest,
         httpEntity: HttpEntity<String>
     ) {
+        println("Got headers: X-Slack-Request-Timestamp: ${httpEntity.headers["X-Slack-Request-Timestamp"]}")
+        println("Got headers: X-Slack-Signature: ${httpEntity.headers["X-Slack-Signature"]}")
         println("Got a body: ${httpEntity.body!!}")
         authenticate(httpRequest, httpEntity.body!!)
         val client: MethodsClient = slack.methods(slackToken)
