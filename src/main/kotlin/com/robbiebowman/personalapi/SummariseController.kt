@@ -40,34 +40,38 @@ class SummariseController {
         httpRequest: HttpServletRequest,
         httpEntity: HttpEntity<String>
     ) {
-        println("Got headers: X-Slack-Request-Timestamp: ${httpEntity.headers["X-Slack-Request-Timestamp"]}")
-        println("Got headers: X-Slack-Signature: ${httpEntity.headers["X-Slack-Signature"]}")
-        println("Got a body: ${httpEntity.body!!}")
-        authenticate(slackSigningSecret!!, httpRequest, httpEntity.body!!)
-        println("Authenticated successfully!")
-        val client: MethodsClient = slack.methods(slackToken)
-        val messages = getMessagesSinceTime(client, channel = "CPDA1JJQ3", since = Instant.ofEpochSecond(1679981897L))
+        // Authenticate request
+        val timestamp = httpRequest.getHeader("X-Slack-Request-Timestamp").toLong()
+        val signature = httpRequest.getHeader("X-Slack-Signature")
+        authenticate(slackSigningSecret!!, signature, timestamp, httpEntity.body!!)
+
+        // Get relevant form fields
+        val channel = params["channel_id"]!!.first()
+        val requestingUser = params["user_id"]!!.first()
+
+        val client = slack.methods(slackToken)
+        val messages = getMessagesSinceTime(client, channel = channel, since = Instant.ofEpochSecond(1679981897L))
         val users = getUserToNameMap(client, messages)
         val formattedMessages = getFormattedMessages(messages, users)
-        val service = OpenAiService(openApiKey)
-        val summary = getSummary(service, formattedMessages)
+        val gpt = OpenAiService(openApiKey)
+        val summary = getSummary(gpt, formattedMessages)
 
         val request =
-            ChatPostEphemeralRequest.builder().channel("#bot_test") // Use a channel ID `C1234567` is preferable
-                .text(summary).user("UAV7CQMCY").build()
+            ChatPostEphemeralRequest.builder().channel(channel)
+                .text(summary).user(requestingUser).build()
         client.chatPostEphemeral(request)
     }
 
-    private fun getSummary(service: OpenAiService, formattedMessages: String): String {
-        val completionRequest = ChatCompletionRequest.builder().model("gpt-3.5-turbo").messages(
+    private fun getSummary(gpt: OpenAiService, formattedMessages: String): String {
+        val completionRequest = ChatCompletionRequest.builder().model("gpt-4-32k").messages(
             listOf(
-                ChatMessage("system", "You are a helpful assistant to a very busy socialite."),
+                ChatMessage("system", "You are a helpful assistant, helping someone get a summary of the messages they've missed."),
                 ChatMessage(
                     "user", "Briefly summarize the following conversation: \n \n $formattedMessages"
                 ),
             )
         ).user("testing").n(1).build()
-        return service.createChatCompletion(completionRequest).choices.first().message.content
+        return gpt.createChatCompletion(completionRequest).choices.first().message.content
     }
 
     private fun getFormattedMessages(

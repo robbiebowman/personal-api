@@ -12,25 +12,18 @@ import kotlin.math.abs
 
 object SlackAuthenticator {
 
-    fun authenticate(slackSigningSecret: String, httpRequest: HttpServletRequest, rawBody: String) {
-        val secretKeySpec = SecretKeySpec(slackSigningSecret.toByteArray(), "HmacSHA256")
-        val mac: Mac = Mac.getInstance("HmacSHA256")
-        mac.init(secretKeySpec)
-
-        val timestamp = httpRequest.getHeader("X-Slack-Request-Timestamp").toLong()
-        val signature = httpRequest.getHeader("X-Slack-Signature")
+    fun authenticate(slackSigningSecret: String, signature: String, timestamp: Long, rawBody: String) {
+        // Validate timestamp
         val now = Instant.now().toEpochMilli()/1000
-        println("About to check time")
-        if (abs(now - timestamp) > 60 * 5) throw Exception() // Replay attack or clock desync
-        println("Time good")
+        if (abs(now - timestamp) > 60 * 5) throw Exception()
 
+        // Validate signature
+        val secretKeySpec = SecretKeySpec(slackSigningSecret.toByteArray(), "HmacSHA256")
+        val mac = Mac.getInstance("HmacSHA256")
+        mac.init(secretKeySpec)
         val toHash = "v0:$timestamp:$rawBody"
         val hash = mac.doFinal(toHash.toByteArray()).joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
         val key = "v0=$hash"
-
-        println("key: $key")
-        println("sig: $signature")
         if (key != signature) throw Exception() // Invalid signature
     }
-
 }
