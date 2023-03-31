@@ -37,6 +37,7 @@ class SummariseController {
         httpRequest: HttpServletRequest,
         httpEntity: HttpEntity<String>
     ) {
+        println("Got a body: ${httpEntity.body!!}")
         authenticate(httpRequest, httpEntity.body!!)
         val client: MethodsClient = slack.methods(slackToken)
         val messages = getMessagesSinceTime(client, channel = "CPDA1JJQ3", since = Instant.ofEpochSecond(1679981897L))
