@@ -95,16 +95,18 @@ class SummariseController {
     // https://stackoverflow.com/a/52230282/1256019
     fun parseHuman(text: String): Duration {
         val m: Matcher = Pattern.compile(
-            "\\s*(?:(\\d+)\\s*(?:hours?|hrs?|h))?" +
+            "\\s*(?:(\\d+)\\s*(?:days?|d))?" +
+                    "\\s*(?:(\\d+)\\s*(?:hours?|hrs?|h))?" +
                     "\\s*(?:(\\d+)\\s*(?:minutes?|mins?|m))?" +
                     "\\s*(?:(\\d+)\\s*(?:seconds?|secs?|s))?" +
                     "\\s*", Pattern.CASE_INSENSITIVE
         )
             .matcher(text)
         if (!m.matches()) throw IllegalArgumentException("Not valid duration: $text")
-        val hours = (if (m.start(1) == -1) 0 else m.group(1).toInt())
-        val mins = (if (m.start(2) == -1) 0 else m.group(2).toInt())
-        val secs = (if (m.start(3) == -1) 0 else m.group(3).toInt())
-        return Duration.ofSeconds((hours * 60L + mins) * 60L + secs)
+        val days = (if (m.start(1) == -1) 0 else m.group(1).toInt())
+        val hours = (if (m.start(2) == -1) 0 else m.group(2).toInt())
+        val mins = (if (m.start(3) == -1) 0 else m.group(3).toInt())
+        val secs = (if (m.start(4) == -1) 0 else m.group(4).toInt())
+        return Duration.ofSeconds(((days * 24 + hours) * 60L + mins) * 60L + secs)
     }
 }
