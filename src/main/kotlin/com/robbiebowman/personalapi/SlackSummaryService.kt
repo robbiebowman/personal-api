@@ -16,6 +16,8 @@ import java.time.Instant
 @Service
 class SlackSummaryService {
 
+    private val gptEngine = "gpt-3.5-turbo"
+
     @Value("\${SLACK_TOKEN}")
     private val slackToken: String? = null
 
@@ -32,16 +34,17 @@ class SlackSummaryService {
         val gpt = OpenAiService(openApiKey)
         val summary = getSummary(gpt, formattedMessages)
 
-        val request =
-            ChatPostEphemeralRequest.builder().channel(channel)
-                .text(summary).user(requestingUser).build()
+        val request = ChatPostEphemeralRequest.builder().channel(channel).text(summary).user(requestingUser).build()
         client.chatPostEphemeral(request)
     }
 
     private fun getSummary(gpt: OpenAiService, formattedMessages: String): String {
-        val completionRequest = ChatCompletionRequest.builder().model("gpt-3.5-turbo").messages(
+        val completionRequest = ChatCompletionRequest.builder().model(gptEngine).messages(
             listOf(
-                ChatMessage("system", "You are a helpful assistant, helping someone get a summary of the messages they've missed."),
+                ChatMessage(
+                    "system",
+                    "You are a helpful assistant, helping someone get a summary of the messages they've missed."
+                ),
                 ChatMessage(
                     "user", "Briefly summarize the following conversation: \n \n $formattedMessages"
                 ),

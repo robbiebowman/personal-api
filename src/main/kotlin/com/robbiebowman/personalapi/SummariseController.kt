@@ -75,9 +75,16 @@ class SummariseController {
             			"type": "section",
             			"text": {
             				"type": "mrkdwn",
-            				"text": "Got it. Give me a few moments to read the messages in the last few hours and write a summary."
+            				"text": "*Got it.*"
             			}
-            		}
+            		},
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": " Give me a few moments to read the messages in the last few hours and write a summary."
+                        }
+                    }
             	]
             }
         """.trimIndent())
