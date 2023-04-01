@@ -21,7 +21,7 @@ class SlackSummaryService {
 
     // GPT engine info
     private val gptEngine = "gpt-3.5-turbo"
-    private val maxTokens = 8000
+    private val maxTokens = 3900
     private val maxLengthExplanation =
         "This may be due to the high length of the conversation. Rest assured the forthcoming edition of GPT will increase the max length 4 fold. "
 

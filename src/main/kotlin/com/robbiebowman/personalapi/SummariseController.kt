@@ -19,12 +19,6 @@ import javax.servlet.http.HttpServletResponse
 @RestController
 class SummariseController {
 
-    @Value("\${SLACK_TOKEN}")
-    private val slackToken: String? = null
-
-    @Value("\${OPEN_API_KEY}")
-    private val openApiKey: String? = null
-
     @Value("\${SLACK_SIGNING_SECRET}")
     private val slackSigningSecret: String? = null
 
@@ -53,7 +47,7 @@ class SummariseController {
         // Authenticate request
         val timestamp = httpRequest.getHeader("X-Slack-Request-Timestamp").toLong()
         val signature = httpRequest.getHeader("X-Slack-Signature")
-        authenticate(slackSigningSecret!!, signature, timestamp, httpEntity.body!!)
+        //authenticate(slackSigningSecret!!, signature, timestamp, httpEntity.body!!)
 
         // Get relevant form fields
         val channel = params["channel_id"]!!.first()
