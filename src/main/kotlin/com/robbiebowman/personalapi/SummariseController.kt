@@ -2,15 +2,6 @@ package com.robbiebowman.personalapi
 
 import com.robbiebowman.personalapi.auth.SlackAuthenticator.authenticate
 import com.robbiebowman.personalapi.service.AsyncService
-import com.slack.api.Slack
-import com.slack.api.methods.MethodsClient
-import com.slack.api.methods.request.chat.ChatPostEphemeralRequest
-import com.slack.api.methods.request.conversations.ConversationsHistoryRequest
-import com.slack.api.methods.request.users.UsersInfoRequest
-import com.slack.api.model.Message
-import com.theokanning.openai.completion.chat.ChatCompletionRequest
-import com.theokanning.openai.completion.chat.ChatMessage
-import com.theokanning.openai.service.OpenAiService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
@@ -18,7 +9,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.*
-import java.time.Instant
+import java.time.Duration
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -65,6 +58,9 @@ class SummariseController {
         // Get relevant form fields
         val channel = params["channel_id"]!!.first()
         val requestingUser = params["user_id"]!!.first()
+        val arguments = params["text"]!!.firstOrNull() ?: "6 hours"
+        val postPublicly = arguments.endsWith("publicly")
+        val duration = parseHuman(arguments.replace("publicly", ""))
 
         response.status = HttpStatus.OK.value()
         response.contentType = "application/json"
@@ -91,7 +87,24 @@ class SummariseController {
         response.writer.flush()
 
         asyncService.process {
-            slackSummaryService.postSummary(channel, requestingUser)
+            slackSummaryService.postSummary(channel, requestingUser, duration, postPublicly)
         }
+    }
+
+    // Thank you Andreas
+    // https://stackoverflow.com/a/52230282/1256019
+    fun parseHuman(text: String): Duration {
+        val m: Matcher = Pattern.compile(
+            "\\s*(?:(\\d+)\\s*(?:hours?|hrs?|h))?" +
+                    "\\s*(?:(\\d+)\\s*(?:minutes?|mins?|m))?" +
+                    "\\s*(?:(\\d+)\\s*(?:seconds?|secs?|s))?" +
+                    "\\s*", Pattern.CASE_INSENSITIVE
+        )
+            .matcher(text)
+        if (!m.matches()) throw IllegalArgumentException("Not valid duration: $text")
+        val hours = (if (m.start(1) == -1) 0 else m.group(1).toInt())
+        val mins = (if (m.start(2) == -1) 0 else m.group(2).toInt())
+        val secs = (if (m.start(3) == -1) 0 else m.group(3).toInt())
+        return Duration.ofSeconds((hours * 60L + mins) * 60L + secs)
     }
 }

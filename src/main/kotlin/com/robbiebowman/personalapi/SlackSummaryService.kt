@@ -3,6 +3,7 @@ package com.robbiebowman.personalapi
 import com.slack.api.Slack
 import com.slack.api.methods.MethodsClient
 import com.slack.api.methods.request.chat.ChatPostEphemeralRequest
+import com.slack.api.methods.request.chat.ChatPostMessageRequest
 import com.slack.api.methods.request.conversations.ConversationsHistoryRequest
 import com.slack.api.methods.request.users.UsersInfoRequest
 import com.slack.api.model.Message
@@ -11,6 +12,7 @@ import com.theokanning.openai.completion.chat.ChatMessage
 import com.theokanning.openai.service.OpenAiService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.Instant
 
 @Service
@@ -26,16 +28,21 @@ class SlackSummaryService {
 
     private val slack = Slack.getInstance()
 
-    fun postSummary(channel: String, requestingUser: String?) {
+    fun postSummary(channel: String, requestingUser: String?, duration: Duration, postPublicly: Boolean) {
         val client = slack.methods(slackToken)
-        val messages = getMessagesSinceTime(client, channel = channel, since = Instant.ofEpochSecond(1679981897L))
+        val messages = getMessagesSinceTime(client, channel = channel, since = Instant.now().minusMillis(duration.toMillis()))
         val users = getUserToNameMap(client, messages)
         val formattedMessages = getFormattedMessages(messages, users)
         val gpt = OpenAiService(openApiKey)
         val summary = getSummary(gpt, formattedMessages)
 
-        val request = ChatPostEphemeralRequest.builder().channel(channel).text(summary).user(requestingUser).build()
-        client.chatPostEphemeral(request)
+        if (postPublicly) {
+            val request = ChatPostMessageRequest.builder().channel(channel).text(summary).build()
+            client.chatPostMessage(request)
+        } else {
+            val request = ChatPostEphemeralRequest.builder().channel(channel).text(summary).user(requestingUser).build()
+            client.chatPostEphemeral(request)
+        }
     }
 
     private fun getSummary(gpt: OpenAiService, formattedMessages: String): String {
