@@ -12,13 +12,19 @@ import com.theokanning.openai.completion.chat.ChatMessage
 import com.theokanning.openai.service.OpenAiService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.lang.Exception
 import java.time.Duration
 import java.time.Instant
 
 @Service
 class SlackSummaryService {
 
+    // GPT engine info
     private val gptEngine = "gpt-3.5-turbo"
+    private val maxTokens = 8000
+    private val maxLengthExplanation =
+        "This may be due to the high length of the conversation. Rest assured the forthcoming edition of GPT will increase the max length 4 fold. "
+
 
     @Value("\${SLACK_TOKEN}")
     private val slackToken: String? = null
@@ -28,36 +34,51 @@ class SlackSummaryService {
 
     private val slack = Slack.getInstance()
 
-    fun postSummary(channel: String, requestingUser: String?, duration: Duration, postPublicly: Boolean) {
+    fun postSummary(channel: String, requestingUser: String, duration: Duration, postPublicly: Boolean) {
         val client = slack.methods(slackToken)
-        val messages = getMessagesSinceTime(client, channel = channel, since = Instant.now().minusMillis(duration.toMillis()))
+        val messages =
+            getMessagesSinceTime(client, channel = channel, since = Instant.now().minusMillis(duration.toMillis()))
+        if (messages.isEmpty()) {
+            sendUserMessage(client, requestingUser, channel, text = "There haven't been any messages!")
+            return
+        }
         val users = getUserToNameMap(client, messages)
         val formattedMessages = getFormattedMessages(messages, users)
         val gpt = OpenAiService(openApiKey)
-        val summary = getSummary(gpt, formattedMessages)
+        val summary = try {
+            getSummary(gpt, formattedMessages, requestingUser)
+        } catch (_: Exception) {
+            "Unfortunately GPT wasn't able to summarise the conversation." + (if (formattedMessages.length > maxTokens * 0.66) maxLengthExplanation else "")
+        }
 
         if (postPublicly) {
             val request = ChatPostMessageRequest.builder().channel(channel).text(summary).build()
             client.chatPostMessage(request)
         } else {
-            val request = ChatPostEphemeralRequest.builder().channel(channel).text(summary).user(requestingUser).build()
-            client.chatPostEphemeral(request)
+            sendUserMessage(client, requestingUser, channel, summary)
         }
     }
 
-    private fun getSummary(gpt: OpenAiService, formattedMessages: String): String {
-        val completionRequest = ChatCompletionRequest.builder().model(gptEngine).messages(
+    private fun getSummary(gpt: OpenAiService, formattedMessages: String, requestingUser: String): String {
+
+        val completionRequest = ChatCompletionRequest.builder().model(gptEngine).maxTokens(maxTokens).messages(
             listOf(
                 ChatMessage(
                     "system",
-                    "You are a helpful assistant, helping someone get a summary of the messages they've missed."
+                    "You are an assistant, helping someone get a summary of the messages they've missed."
                 ),
                 ChatMessage(
                     "user", "Briefly summarize the following conversation: \n \n $formattedMessages"
                 ),
             )
-        ).user("testing").n(1).build()
-        return gpt.createChatCompletion(completionRequest).choices.first().message.content
+        ).user(requestingUser).n(1).build()
+        val result = gpt.createChatCompletion(completionRequest)
+        return result.choices.first().message.content
+    }
+
+    private fun sendUserMessage(client: MethodsClient, user: String, channel: String, text: String) {
+        val request = ChatPostEphemeralRequest.builder().channel(channel).text(text).user(user).build()
+        client.chatPostEphemeral(request)
     }
 
     private fun getFormattedMessages(
