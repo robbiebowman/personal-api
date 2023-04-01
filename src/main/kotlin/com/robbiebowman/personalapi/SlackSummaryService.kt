@@ -47,7 +47,8 @@ class SlackSummaryService {
         val gpt = OpenAiService(openApiKey)
         val summary = try {
             getSummary(gpt, formattedMessages, requestingUser)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            println(e)
             "Unfortunately GPT wasn't able to summarise the conversation." + (if (formattedMessages.length > maxTokens * 0.66) maxLengthExplanation else "")
         }
 
