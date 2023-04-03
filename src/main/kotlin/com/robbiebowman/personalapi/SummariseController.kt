@@ -60,7 +60,7 @@ class SummariseController {
         this.slackSummaryService = slackSummaryService
     }
 
-    @PostMapping("/summarise/redirect")
+    @GetMapping("/summarise/redirect")
     fun summariseOauth(
         @RequestParam params: MultiValueMap<String, String>,
     ) {
