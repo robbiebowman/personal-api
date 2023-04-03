@@ -77,7 +77,7 @@ class SlackSummaryService {
 
     private fun getSummary(gpt: OpenAiService, formattedMessages: String, requestingUser: String): String {
 
-        val completionRequest = ChatCompletionRequest.builder().model(gptEngine).maxTokens(maxTokens).messages(
+        val completionRequest = ChatCompletionRequest.builder().model(gptEngine).messages(
             listOf(
                 ChatMessage(
                     "system",
