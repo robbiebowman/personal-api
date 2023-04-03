@@ -1,4 +1,4 @@
-package com.robbiebowman.personalapi
+package com.robbiebowman.personalapi.service
 
 import com.slack.api.Slack
 import com.slack.api.methods.MethodsClient
@@ -23,13 +23,12 @@ class SlackSummaryService {
     private val gptEngine = "gpt-3.5-turbo"
     private val maxTokens = 3900
     private val maxLengthExplanation =
-        "This may be due to the high length of the conversation. Rest assured the forthcoming edition of GPT will increase the max length 4 fold. "
-
-
-    @Value("\${SLACK_TOKEN}")
+        "This may be due to the high length of the conversation. Rest assured the forthcoming edition of GPT will increase the max length 8 fold. "
+    
+    @Value("\${slack_token}")
     private val slackToken: String? = null
 
-    @Value("\${OPEN_API_KEY}")
+    @Value("\${open_ai_api_key}")
     private val openApiKey: String? = null
 
     private val slack = Slack.getInstance()

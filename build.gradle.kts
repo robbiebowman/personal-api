@@ -34,6 +34,10 @@ dependencies {
 
 	implementation("com.theokanning.openai-gpt3-java:service:0.11.1")
 
+	implementation("com.azure:azure-security-keyvault-secrets:4.6.0")
+	implementation("com.azure:azure-identity:1.8.1")
+
+
 	// Test
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

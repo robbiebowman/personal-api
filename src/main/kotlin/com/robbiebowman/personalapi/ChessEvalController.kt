@@ -17,7 +17,7 @@ class ChessEvalController {
 
     val numChessEvalLines = 100_000
 
-    @Value("\${CHESS_DAILY_SEED}")
+    @Value("\${chess_daily_seed}")
     private val chessDailySeed: String? = null
 
     private val csv = csvReader()
