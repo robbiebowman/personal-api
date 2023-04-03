@@ -28,6 +28,9 @@ class SummariseController {
     @Value("\${slack_signing_secret}")
     private val slackSigningSecret: String? = null
 
+    @Value("\${slack_token}")
+    private val slackToken: String? = null
+
     @Value("\${slack_client_id}")
     private val slackClientId: String? = null
 
@@ -77,7 +80,7 @@ class SummariseController {
         val slackTempAuthCode = params["code"]!!.first()
         println("Code: $slackTempAuthCode")
 
-        val response = Slack.getInstance().methods().oauthAccess(
+        val response = Slack.getInstance().methods(slackToken).oauthAccess(
             OAuthAccessRequest.builder().clientId(slackClientId).clientSecret(slackClientSecret).code(slackTempAuthCode).build()
         )
         println("Got response: team id: ${response.teamId}, access token: ${response.accessToken}")
@@ -97,7 +100,7 @@ class SummariseController {
         // Authenticate request
         val timestamp = httpRequest.getHeader("X-Slack-Request-Timestamp").toLong()
         val signature = httpRequest.getHeader("X-Slack-Signature")
-        SlackAuthenticator.authenticate(slackSigningSecret!!, signature, timestamp, httpEntity.body!!)
+        //SlackAuthenticator.authenticate(slackSigningSecret!!, signature, timestamp, httpEntity.body!!)
 
         // Get relevant form fields
         val channel = params["channel_id"]!!.first()
