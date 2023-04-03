@@ -7,6 +7,7 @@ import com.robbiebowman.personalapi.service.AsyncService
 import com.robbiebowman.personalapi.service.SlackSummaryService
 import com.slack.api.Slack
 import com.slack.api.methods.request.oauth.OAuthAccessRequest
+import com.slack.api.methods.request.oauth.OAuthV2AccessRequest
 import com.slack.api.webhook.Payload
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -80,12 +81,12 @@ class SummariseController {
         val slackTempAuthCode = params["code"]!!.first()
         println("Code: $slackTempAuthCode")
 
-        val response = Slack.getInstance().methods(slackToken).oauthAccess(
-            OAuthAccessRequest.builder().clientId(slackClientId).clientSecret(slackClientSecret).code(slackTempAuthCode).build()
+        val response = Slack.getInstance().methods().oauthV2Access(
+            OAuthV2AccessRequest.builder().clientId(slackClientId).clientSecret(slackClientSecret).code(slackTempAuthCode).build()
         )
-        println("Got response: team id: ${response.teamId}, access token: ${response.accessToken}")
+        println("Got response: team id: ${response.team.id}, access token: ${response.accessToken}")
 
-        secretClient.setSecret(response.teamId, response.accessToken)
+        secretClient.setSecret(response.team.id, response.accessToken)
         println("Saved access token!")
     }
 
