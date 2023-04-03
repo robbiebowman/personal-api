@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service
 import java.lang.Exception
 import java.time.Duration
 import java.time.Instant
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
+import kotlin.math.abs
 
 @Service
 class SlackSummaryService {
@@ -24,17 +27,14 @@ class SlackSummaryService {
     private val maxTokens = 3900
     private val maxLengthExplanation =
         "This may be due to the high length of the conversation. Rest assured the forthcoming edition of GPT will increase the max length 8 fold. "
-    
-    @Value("\${slack_token}")
-    private val slackToken: String? = null
 
     @Value("\${open_ai_api_key}")
     private val openApiKey: String? = null
 
     private val slack = Slack.getInstance()
 
-    fun postSummary(channel: String, requestingUser: String, duration: Duration, postPublicly: Boolean) {
-        val client = slack.methods(slackToken)
+    fun postSummary(accessToken: String, channel: String, requestingUser: String, duration: Duration, postPublicly: Boolean) {
+        val client = slack.methods(accessToken)
         val messages =
             getMessagesSinceTime(client, channel = channel, since = Instant.now().minusMillis(duration.toMillis()))
         if (messages.isEmpty()) {
@@ -57,6 +57,21 @@ class SlackSummaryService {
         } else {
             sendUserMessage(client, requestingUser, channel, summary)
         }
+    }
+
+    fun authenticate(slackSigningSecret: String, signature: String, timestamp: Long, rawBody: String) {
+        // Validate timestamp
+        val now = Instant.now().epochSecond
+        if (abs(now - timestamp) > 60 * 5) throw Exception()
+
+        // Validate signature
+        val secretKeySpec = SecretKeySpec(slackSigningSecret.toByteArray(), "HmacSHA256")
+        val mac = Mac.getInstance("HmacSHA256")
+        mac.init(secretKeySpec)
+        val toHash = "v0:$timestamp:$rawBody"
+        val hash = mac.doFinal(toHash.toByteArray()).joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
+        val key = "v0=$hash"
+        if (key != signature) throw Exception() // Invalid signature
     }
 
     private fun getSummary(gpt: OpenAiService, formattedMessages: String, requestingUser: String): String {

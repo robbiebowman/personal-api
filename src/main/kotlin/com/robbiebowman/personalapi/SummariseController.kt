@@ -1,22 +1,18 @@
 package com.robbiebowman.personalapi
 
-import com.azure.identity.ClientSecretCredentialBuilder
-import com.azure.security.keyvault.secrets.SecretClientBuilder
-import com.robbiebowman.personalapi.auth.SlackAuthenticator
+import com.azure.security.keyvault.secrets.SecretClient
 import com.robbiebowman.personalapi.service.AsyncService
 import com.robbiebowman.personalapi.service.SlackSummaryService
 import com.slack.api.Slack
-import com.slack.api.methods.request.oauth.OAuthAccessRequest
 import com.slack.api.methods.request.oauth.OAuthV2AccessRequest
-import com.slack.api.webhook.Payload
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.*
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.client.RestTemplate
 import java.time.Duration
-import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import javax.servlet.http.HttpServletRequest
@@ -29,30 +25,17 @@ class SummariseController {
     @Value("\${slack_signing_secret}")
     private val slackSigningSecret: String? = null
 
-    @Value("\${slack_token}")
-    private val slackToken: String? = null
-
     @Value("\${slack_client_id}")
     private val slackClientId: String? = null
 
     @Value("\${slack_client_secret}")
     private val slackClientSecret: String? = null
 
-    @Value("\${azure_app_client_id}")
-    private val azureAppClientId: String? = null
-
-    @Value("\${azure_app_password}")
-    private val azureAppPassword: String? = null
-
-    @Value("\${azure_app_tenant_id}")
-    private val azureAppTenantId: String? = null
-
-    @Value("\${azure_key_vault_url}")
-    private val azureKeyVaultUrl: String? = null
-
     private lateinit var asyncService: AsyncService;
 
     private lateinit var slackSummaryService: SlackSummaryService;
+
+    private lateinit var secretClient: SecretClient
 
     @Autowired
     fun setAsyncService(asyncService: AsyncService) {
@@ -64,30 +47,20 @@ class SummariseController {
         this.slackSummaryService = slackSummaryService
     }
 
+    @Autowired
+    fun setSecretClient(secretClient: SecretClient) {
+        this.secretClient = secretClient
+    }
+
     @GetMapping("/summarise/redirect")
     fun summariseOauth(
         @RequestParam params: MultiValueMap<String, String>,
     ) {
-        println("Got to redirect!")
-        val secretClient = SecretClientBuilder()
-            .vaultUrl(azureKeyVaultUrl)
-            .credential(
-                ClientSecretCredentialBuilder().tenantId(azureAppTenantId).clientId(azureAppClientId)
-                    .clientSecret(azureAppPassword).build()
-            )
-            .buildClient()
-
-        println("Getting code param")
         val slackTempAuthCode = params["code"]!!.first()
-        println("Code: $slackTempAuthCode")
-
         val response = Slack.getInstance().methods().oauthV2Access(
             OAuthV2AccessRequest.builder().clientId(slackClientId).clientSecret(slackClientSecret).code(slackTempAuthCode).build()
         )
-        println("Got response: team id: ${response.team.id}, access token: ${response.accessToken}")
-
         secretClient.setSecret(response.team.id, response.accessToken)
-        println("Saved access token!")
     }
 
     @PostMapping("/summarise", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
@@ -101,11 +74,12 @@ class SummariseController {
         // Authenticate request
         val timestamp = httpRequest.getHeader("X-Slack-Request-Timestamp").toLong()
         val signature = httpRequest.getHeader("X-Slack-Signature")
-        //SlackAuthenticator.authenticate(slackSigningSecret!!, signature, timestamp, httpEntity.body!!)
+        slackSummaryService.authenticate(slackSigningSecret!!, signature, timestamp, httpEntity.body!!)
 
         // Get relevant form fields
         val channel = params["channel_id"]!!.first()
         val requestingUser = params["user_id"]!!.first()
+        val teamId = params["team_id"]!!.first()
         val arguments = params["text"]!!.firstOrNull() ?: "6 hours"
         val postPublicly = arguments.endsWith("publicly")
         val duration = parseHuman(arguments.replace("publicly", ""))
@@ -136,8 +110,10 @@ class SummariseController {
         )
         response.writer.flush()
 
+        val accessToken = secretClient.getSecret(teamId).value
+
         asyncService.process {
-            slackSummaryService.postSummary(channel, requestingUser, duration, postPublicly)
+            slackSummaryService.postSummary(accessToken, channel, requestingUser, duration, postPublicly)
         }
     }
 
