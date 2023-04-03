@@ -101,7 +101,7 @@ class SummariseController {
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": " Give me a few moments to read the messages in the last few hours and write a summary."
+                            "text": "Give me a few moments to read the messages and write a summary."
                         }
                     }
             	]

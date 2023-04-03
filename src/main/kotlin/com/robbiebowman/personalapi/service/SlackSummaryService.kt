@@ -48,6 +48,7 @@ class SlackSummaryService {
             getSummary(gpt, formattedMessages, requestingUser)
         } catch (e: Exception) {
             println(e)
+            println("Prompt: $formattedMessages")
             "Unfortunately GPT wasn't able to summarise the conversation." + (if (formattedMessages.length > maxTokens * 0.66) maxLengthExplanation else "")
         }
 
