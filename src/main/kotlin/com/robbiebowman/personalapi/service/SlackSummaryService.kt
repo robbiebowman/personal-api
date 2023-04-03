@@ -1,5 +1,6 @@
 package com.robbiebowman.personalapi.service
 
+import com.google.gson.Gson
 import com.slack.api.Slack
 import com.slack.api.methods.MethodsClient
 import com.slack.api.methods.request.chat.ChatPostEphemeralRequest
@@ -48,7 +49,6 @@ class SlackSummaryService {
             getSummary(gpt, formattedMessages, requestingUser)
         } catch (e: Exception) {
             println(e)
-            println("Prompt: $formattedMessages")
             "Unfortunately GPT wasn't able to summarise the conversation." + (if (formattedMessages.length > maxTokens * 0.66) maxLengthExplanation else "")
         }
 
@@ -89,6 +89,7 @@ class SlackSummaryService {
             )
         ).user(requestingUser).n(1).build()
         val result = gpt.createChatCompletion(completionRequest)
+        println("Result from OpenAPI: ${Gson().toJson(result)}")
         return result.choices.first().message.content
     }
 
