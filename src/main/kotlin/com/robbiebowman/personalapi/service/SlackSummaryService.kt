@@ -7,6 +7,7 @@ import com.slack.api.methods.MethodsClient
 import com.slack.api.methods.request.chat.ChatPostEphemeralRequest
 import com.slack.api.methods.request.chat.ChatPostMessageRequest
 import com.slack.api.methods.request.conversations.ConversationsHistoryRequest
+import com.slack.api.methods.request.conversations.ConversationsJoinRequest
 import com.slack.api.methods.request.users.UsersInfoRequest
 import com.slack.api.model.Message
 import com.theokanning.openai.completion.chat.ChatCompletionRequest
@@ -37,6 +38,7 @@ class SlackSummaryService {
 
     fun postSummary(accessToken: String, channel: String, requestingUser: String, duration: Duration, postPublicly: Boolean) {
         val client = slack.methods(accessToken)
+        client.conversationsJoin(ConversationsJoinRequest.builder().channel(channel).build())
         val messages =
             getMessagesSinceTime(client, channel = channel, since = Instant.now().minusMillis(duration.toMillis()))
         if (messages.isEmpty()) {
