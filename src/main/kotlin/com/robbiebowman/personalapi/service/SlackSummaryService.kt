@@ -1,6 +1,7 @@
 package com.robbiebowman.personalapi.service
 
 import com.google.gson.Gson
+import com.robbiebowman.personalapi.util.DateUtils
 import com.slack.api.Slack
 import com.slack.api.methods.MethodsClient
 import com.slack.api.methods.request.chat.ChatPostEphemeralRequest
@@ -52,11 +53,14 @@ class SlackSummaryService {
             "Unfortunately GPT wasn't able to summarise the conversation." + (if (formattedMessages.length > maxTokens * 0.66) maxLengthExplanation else "")
         }
 
+        val humanReadableDuration = DateUtils.durationToHuman(duration)
         if (postPublicly) {
-            val request = ChatPostMessageRequest.builder().channel(channel).text(summary).build()
+            val explainer = "Summary of messages in the past $humanReadableDuration, as requested by $requestingUser\n\n"
+            val request = ChatPostMessageRequest.builder().channel(channel).text("$explainer$summary").build()
             client.chatPostMessage(request)
         } else {
-            sendUserMessage(client, requestingUser, channel, summary)
+            val explainer = "Summary of messages in the past $humanReadableDuration\n\n"
+            sendUserMessage(client, requestingUser, channel, "$explainer$summary")
         }
     }
 

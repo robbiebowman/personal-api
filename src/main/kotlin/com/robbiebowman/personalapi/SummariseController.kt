@@ -3,6 +3,7 @@ package com.robbiebowman.personalapi
 import com.azure.security.keyvault.secrets.SecretClient
 import com.robbiebowman.personalapi.service.AsyncService
 import com.robbiebowman.personalapi.service.SlackSummaryService
+import com.robbiebowman.personalapi.util.DateUtils
 import com.slack.api.Slack
 import com.slack.api.methods.request.oauth.OAuthV2AccessRequest
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,6 +14,7 @@ import org.springframework.http.MediaType
 import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.*
 import java.time.Duration
+import java.util.Date
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import javax.servlet.http.HttpServletRequest
@@ -82,7 +84,7 @@ class SummariseController {
         val teamId = params["team_id"]!!.first()
         val arguments = params["text"]!!.firstOrNull() ?: "6 hours"
         val postPublicly = arguments.endsWith("publicly")
-        val duration = parseHuman(arguments.replace("publicly", ""))
+        val duration = DateUtils.parseHuman(arguments.replace("publicly", ""))
 
         response.status = HttpStatus.OK.value()
         response.contentType = "application/json"
@@ -101,7 +103,7 @@ class SummariseController {
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": "Give me a few moments to read the messages and write a summary."
+                            "text": "Give me a few moments to read all the messages in the past ${DateUtils.durationToHuman(duration)} and write a summary."
                         }
                     }
             	]
@@ -115,24 +117,5 @@ class SummariseController {
         asyncService.process {
             slackSummaryService.postSummary(accessToken, channel, requestingUser, duration, postPublicly)
         }
-    }
-
-    // Thank you Andreas
-    // https://stackoverflow.com/a/52230282/1256019
-    fun parseHuman(text: String): Duration {
-        val m: Matcher = Pattern.compile(
-            "\\s*(?:(\\d+)\\s*(?:days?|d))?" +
-                    "\\s*(?:(\\d+)\\s*(?:hours?|hrs?|h))?" +
-                    "\\s*(?:(\\d+)\\s*(?:minutes?|mins?|m))?" +
-                    "\\s*(?:(\\d+)\\s*(?:seconds?|secs?|s))?" +
-                    "\\s*", Pattern.CASE_INSENSITIVE
-        )
-            .matcher(text)
-        if (!m.matches()) throw IllegalArgumentException("Not valid duration: $text")
-        val days = (if (m.start(1) == -1) 0 else m.group(1).toInt())
-        val hours = (if (m.start(2) == -1) 0 else m.group(2).toInt())
-        val mins = (if (m.start(3) == -1) 0 else m.group(3).toInt())
-        val secs = (if (m.start(4) == -1) 0 else m.group(4).toInt())
-        return Duration.ofSeconds(((days * 24 + hours) * 60L + mins) * 60L + secs)
     }
 }
