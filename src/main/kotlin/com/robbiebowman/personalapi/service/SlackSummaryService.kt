@@ -55,7 +55,7 @@ class SlackSummaryService {
 
         val humanReadableDuration = DateUtils.durationToHuman(duration)
         if (postPublicly) {
-            val explainer = "Summary of messages in the past $humanReadableDuration, as requested by $requestingUser\n\n"
+            val explainer = "Summary of messages in the past $humanReadableDuration, as requested by <@$requestingUser>\n\n"
             val request = ChatPostMessageRequest.builder().channel(channel).text("$explainer$summary").build()
             client.chatPostMessage(request)
         } else {
