@@ -56,7 +56,8 @@ class SummariseController {
     ) {
         val slackTempAuthCode = params["code"]!!.first()
         val response = Slack.getInstance().methods().oauthV2Access(
-            OAuthV2AccessRequest.builder().clientId(slackClientId).clientSecret(slackClientSecret).code(slackTempAuthCode).build()
+            OAuthV2AccessRequest.builder().clientId(slackClientId).clientSecret(slackClientSecret)
+                .redirectUri("https://www.robbiebowman.com/tireless-assistant").code(slackTempAuthCode).build()
         )
         secretClient.setSecret(response.team.id, response.accessToken)
     }
@@ -99,7 +100,11 @@ class SummariseController {
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": "Give me a few moments to read all the messages in the past ${DateUtils.durationToHuman(duration)} and write a summary."
+                            "text": "Give me a few moments to read all the messages in the past ${
+                DateUtils.durationToHuman(
+                    duration
+                )
+            } and write a summary."
                         }
                     }
             	]
