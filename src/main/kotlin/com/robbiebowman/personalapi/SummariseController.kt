@@ -1,6 +1,7 @@
 package com.robbiebowman.personalapi
 
 import com.azure.security.keyvault.secrets.SecretClient
+import com.google.gson.Gson
 import com.robbiebowman.personalapi.service.AsyncService
 import com.robbiebowman.personalapi.service.SlackSummaryService
 import com.robbiebowman.personalapi.util.DateUtils
@@ -56,10 +57,16 @@ class SummariseController {
     ) {
         try {
             val slackTempAuthCode = params["code"]!!.first()
+            println("Code: $slackTempAuthCode")
             val response = Slack.getInstance().methods().oauthV2Access(
                 OAuthV2AccessRequest.builder().clientId(slackClientId).clientSecret(slackClientSecret)
                     .redirectUri("https://www.robbiebowman.com/tireless-assistant").code(slackTempAuthCode).build()
             )
+            println("Got response")
+            println("response: ${Gson().toJson(response)}")
+            println("response.team: ${response.team}")
+            println("response.team.id: ${response.team.id}")
+            println("response.accessToken: ${response.accessToken}")
             secretClient.setSecret(response.team.id, response.accessToken)
         } catch (e: Exception) {
             println(e.message)
