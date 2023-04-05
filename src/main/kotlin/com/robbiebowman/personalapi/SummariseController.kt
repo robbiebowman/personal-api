@@ -54,12 +54,17 @@ class SummariseController {
     fun summariseOauth(
         @RequestParam params: MultiValueMap<String, String>,
     ) {
-        val slackTempAuthCode = params["code"]!!.first()
-        val response = Slack.getInstance().methods().oauthV2Access(
-            OAuthV2AccessRequest.builder().clientId(slackClientId).clientSecret(slackClientSecret)
-                .redirectUri("https://www.robbiebowman.com/tireless-assistant").code(slackTempAuthCode).build()
-        )
-        secretClient.setSecret(response.team.id, response.accessToken)
+        try {
+            val slackTempAuthCode = params["code"]!!.first()
+            val response = Slack.getInstance().methods().oauthV2Access(
+                OAuthV2AccessRequest.builder().clientId(slackClientId).clientSecret(slackClientSecret)
+                    .redirectUri("https://www.robbiebowman.com/tireless-assistant").code(slackTempAuthCode).build()
+            )
+            secretClient.setSecret(response.team.id, response.accessToken)
+        } catch (e: Exception) {
+            println(e.message)
+            println(e)
+        }
     }
 
     @PostMapping("/summarise", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
