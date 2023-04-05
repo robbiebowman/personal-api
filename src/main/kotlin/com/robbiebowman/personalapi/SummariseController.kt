@@ -13,10 +13,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.*
-import java.time.Duration
-import java.util.Date
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -112,9 +108,8 @@ class SummariseController {
         )
         response.writer.flush()
 
-        val accessToken = secretClient.getSecret(teamId).value
-
         asyncService.process {
+            val accessToken = secretClient.getSecret(teamId).value
             slackSummaryService.postSummary(accessToken, channel, requestingUser, duration, postPublicly)
         }
     }

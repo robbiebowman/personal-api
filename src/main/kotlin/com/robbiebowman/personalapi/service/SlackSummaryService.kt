@@ -1,6 +1,5 @@
 package com.robbiebowman.personalapi.service
 
-import com.google.gson.Gson
 import com.robbiebowman.personalapi.util.DateUtils
 import com.slack.api.Slack
 import com.slack.api.methods.MethodsClient
@@ -15,7 +14,6 @@ import com.theokanning.openai.completion.chat.ChatMessage
 import com.theokanning.openai.service.OpenAiService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.lang.Exception
 import java.time.Duration
 import java.time.Instant
 import javax.crypto.Mac
@@ -27,7 +25,7 @@ class SlackSummaryService {
 
     // GPT engine info
     private val gptEngine = "gpt-3.5-turbo"
-    private val maxTokens = 3900
+    private val maxTokens = 4000
     private val maxLengthExplanation =
         "This may be due to the high length of the conversation. Rest assured the forthcoming edition of GPT will increase the max length 8 fold. "
 
@@ -51,8 +49,7 @@ class SlackSummaryService {
         val summary = try {
             getSummary(gpt, formattedMessages, requestingUser)
         } catch (e: Exception) {
-            println(e)
-            "Unfortunately GPT wasn't able to summarise the conversation." + (if (formattedMessages.length > maxTokens * 0.66) maxLengthExplanation else "")
+            "Unfortunately GPT wasn't able to summarise the conversation." + (if (formattedMessages.split(' ').size > maxTokens * 0.75) maxLengthExplanation else "")
         }
 
         val humanReadableDuration = DateUtils.durationToHuman(duration)
@@ -95,7 +92,6 @@ class SlackSummaryService {
             )
         ).user(requestingUser).n(1).build()
         val result = gpt.createChatCompletion(completionRequest)
-        println("Result from OpenAPI: ${Gson().toJson(result)}")
         return result.choices.first().message.content
     }
 
