@@ -53,6 +53,7 @@ class SummariseController {
     @GetMapping("/summarise/redirect")
     fun summariseOauth(
         @RequestParam params: MultiValueMap<String, String>,
+        httpServletResponse: HttpServletResponse
     ) {
         val slackTempAuthCode = params["code"]!!.first()
         println("Code: $slackTempAuthCode")
@@ -61,6 +62,9 @@ class SummariseController {
                 .code(slackTempAuthCode).build()
         )
         secretClient.setSecret(response.team.id, response.accessToken)
+
+        httpServletResponse.setHeader("Location", "https://www.robbiebowman.com/tireless-assistant?install=true");
+        httpServletResponse.status = 302;
     }
 
     @PostMapping("/summarise", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
