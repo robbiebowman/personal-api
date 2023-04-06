@@ -14,6 +14,7 @@ import com.slack.api.model.Message
 import com.theokanning.openai.completion.chat.ChatCompletionRequest
 import com.theokanning.openai.completion.chat.ChatMessage
 import com.theokanning.openai.service.OpenAiService
+import com.theokanning.openai.service.OpenAiService.defaultClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -63,7 +64,7 @@ class SlackSummaryService {
         }
         val users = getUserToNameMap(client, messages)
         val formattedMessages = getFormattedMessages(messages, users)
-        val gpt = OpenAiService(openApiKey)
+        val gpt = OpenAiService(openApiKey, Duration.ofSeconds(30))
         val summary = try {
             getSummary(gpt, formattedMessages, requestingUser)
         } catch (e: Exception) {
