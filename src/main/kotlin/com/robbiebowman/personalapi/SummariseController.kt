@@ -29,6 +29,12 @@ class SummariseController {
     @Value("\${slack_client_secret}")
     private val slackClientSecret: String? = null
 
+    @Value("\${slack_bot_install_redirect_url}")
+    private val slackBotInstallRedirectUrl: String? = null
+
+    @Value("\${env}")
+    private val env: String? = null
+
     private lateinit var asyncService: AsyncService;
 
     private lateinit var slackSummaryService: SlackSummaryService;
@@ -56,14 +62,13 @@ class SummariseController {
         httpServletResponse: HttpServletResponse
     ) {
         val slackTempAuthCode = params["code"]!!.first()
-        println("Code: $slackTempAuthCode")
         val response = Slack.getInstance().methods().oauthV2Access(
             OAuthV2AccessRequest.builder().clientId(slackClientId).clientSecret(slackClientSecret)
                 .code(slackTempAuthCode).build()
         )
         secretClient.setSecret(response.team.id, response.accessToken)
 
-        httpServletResponse.setHeader("Location", "https://www.robbiebowman.com/tireless-assistant?install=true");
+        httpServletResponse.setHeader("Location", slackBotInstallRedirectUrl);
         httpServletResponse.status = 302;
     }
 
@@ -78,7 +83,9 @@ class SummariseController {
         // Authenticate request
         val timestamp = httpRequest.getHeader("X-Slack-Request-Timestamp").toLong()
         val signature = httpRequest.getHeader("X-Slack-Signature")
-        slackSummaryService.authenticate(slackSigningSecret!!, signature, timestamp, httpEntity.body!!)
+        if (env != "dev") {
+            slackSummaryService.authenticate(slackSigningSecret!!, signature, timestamp, httpEntity.body!!)
+        }
 
         // Get relevant form fields
         val channel = params["channel_id"]!!.first()

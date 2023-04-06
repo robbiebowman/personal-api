@@ -1,5 +1,6 @@
 package com.robbiebowman.personalapi.service
 
+import com.azure.security.keyvault.secrets.SecretClient
 import com.robbiebowman.personalapi.util.DateUtils
 import com.slack.api.Slack
 import com.slack.api.methods.MethodsClient
@@ -12,6 +13,7 @@ import com.slack.api.model.Message
 import com.theokanning.openai.completion.chat.ChatCompletionRequest
 import com.theokanning.openai.completion.chat.ChatMessage
 import com.theokanning.openai.service.OpenAiService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -32,9 +34,24 @@ class SlackSummaryService {
     @Value("\${open_ai_api_key}")
     private val openApiKey: String? = null
 
+    @Value("\${open_ai_system_prompt}")
+    private val openAiSystemPrompt: String? = null
+
+    @Value("\${open_ai_user_instruction}")
+    private val openAiUserInstruction: String? = null
+
+    private lateinit var secretClient: SecretClient
+
     private val slack = Slack.getInstance()
 
-    fun postSummary(accessToken: String, channel: String, requestingUser: String, duration: Duration, postPublicly: Boolean) {
+    @Autowired
+    fun setSecretClient(secretClient: SecretClient) {
+        this.secretClient = secretClient
+    }
+
+    fun postSummary(
+        accessToken: String, channel: String, requestingUser: String, duration: Duration, postPublicly: Boolean
+    ) {
         val client = slack.methods(accessToken)
         client.conversationsJoin(ConversationsJoinRequest.builder().channel(channel).build())
         val messages =
@@ -54,7 +71,8 @@ class SlackSummaryService {
 
         val humanReadableDuration = DateUtils.durationToHuman(duration)
         if (postPublicly) {
-            val explainer = "Summary of messages in the past $humanReadableDuration, as requested by <@$requestingUser>\n\n"
+            val explainer =
+                "Summary of messages in the past $humanReadableDuration, as requested by <@$requestingUser>\n\n"
             val request = ChatPostMessageRequest.builder().channel(channel).text("$explainer$summary").build()
             client.chatPostMessage(request)
         } else {
@@ -73,21 +91,21 @@ class SlackSummaryService {
         val mac = Mac.getInstance("HmacSHA256")
         mac.init(secretKeySpec)
         val toHash = "v0:$timestamp:$rawBody"
-        val hash = mac.doFinal(toHash.toByteArray()).joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
+        val hash =
+            mac.doFinal(toHash.toByteArray()).joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
         val key = "v0=$hash"
         if (key != signature) throw Exception() // Invalid signature
     }
 
     private fun getSummary(gpt: OpenAiService, formattedMessages: String, requestingUser: String): String {
-
         val completionRequest = ChatCompletionRequest.builder().model(gptEngine).messages(
             listOf(
                 ChatMessage(
                     "system",
-                    "You are an assistant, helping someone get a summary of the messages they've missed."
+                    openAiSystemPrompt
                 ),
                 ChatMessage(
-                    "user", "Briefly summarize the following conversation: \n \n $formattedMessages"
+                    "user", "$openAiUserInstruction \n \n $formattedMessages"
                 ),
             )
         ).user(requestingUser).n(1).build()
