@@ -1,6 +1,7 @@
 package com.robbiebowman.personalapi.service
 
 import com.azure.security.keyvault.secrets.SecretClient
+import com.google.gson.Gson
 import com.robbiebowman.personalapi.util.DateUtils
 import com.slack.api.Slack
 import com.slack.api.methods.MethodsClient
@@ -66,6 +67,8 @@ class SlackSummaryService {
         val summary = try {
             getSummary(gpt, formattedMessages, requestingUser)
         } catch (e: Exception) {
+            println(e.message)
+            println("Error: ${Gson().toJson(e)}")
             "Unfortunately GPT wasn't able to summarise the conversation." + (if (formattedMessages.split(' ').size > maxTokens * 0.75) maxLengthExplanation else "")
         }
 
