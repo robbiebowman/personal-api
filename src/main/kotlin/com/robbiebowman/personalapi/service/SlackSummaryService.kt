@@ -28,8 +28,8 @@ import kotlin.math.abs
 class SlackSummaryService {
 
     // GPT engine info
-    private val gptEngine = "gpt-4"
-    private val maxTokens = 4000
+    private val gptEngine = "gpt-3.5-turbo-16k"
+    private val maxTokens = 16_000
     private val maxLengthExplanation =
         "This may be due to the high length of the conversation. Rest assured the forthcoming edition of GPT will increase the max length 8 fold. "
 
@@ -114,7 +114,9 @@ class SlackSummaryService {
             )
         ).user(requestingUser).n(1).build()
         val result = gpt.createChatCompletion(completionRequest)
-        return result.choices.first().message.content
+        val content = result.choices.first().message.content
+        val contentWithNiceBulletPoints = content.replace(Regex("^- "), "⁍ ")
+        return contentWithNiceBulletPoints
     }
 
     private fun sendUserMessage(client: MethodsClient, user: String, channel: String, text: String) {
