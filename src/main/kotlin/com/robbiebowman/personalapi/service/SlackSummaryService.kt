@@ -115,7 +115,7 @@ class SlackSummaryService {
         ).user(requestingUser).n(1).build()
         val result = gpt.createChatCompletion(completionRequest)
         val content = result.choices.first().message.content
-        val contentWithNiceBulletPoints = content.replace(Regex("^- "), "⁍ ")
+        val contentWithNiceBulletPoints = content.replace(Regex("^- ", RegexOption.MULTILINE), "• ")
         return contentWithNiceBulletPoints
     }
 
