@@ -37,6 +37,9 @@ dependencies {
 	implementation("com.azure:azure-security-keyvault-secrets:4.6.0")
 	implementation("com.azure:azure-identity:1.8.1")
 
+	implementation("com.github.victools:jsonschema-generator:4.31.1")
+	implementation("com.github.victools:jsonschema-module-jackson:4.31.1")
+
 
 	// Test
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

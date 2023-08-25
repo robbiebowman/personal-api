@@ -117,6 +117,10 @@ class SlackSummaryService {
         return result.choices.first().message.content
     }
 
+    private fun simplify(a: Boolean, b: Boolean, c: Boolean): Boolean {
+        return !a != (b != c)
+    }
+
     private fun sendUserMessage(client: MethodsClient, user: String, channel: String, text: String) {
         val request = ChatPostEphemeralRequest.builder().channel(channel).text(text).user(user).build()
         client.chatPostEphemeral(request)

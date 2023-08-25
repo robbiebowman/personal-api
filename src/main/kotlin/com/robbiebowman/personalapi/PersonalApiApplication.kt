@@ -1,5 +1,6 @@
 package com.robbiebowman.personalapi
 
+import com.robbiebowman.personalapi.service.JsonSchemaGenerator
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.web.bind.annotation.RequestParam
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 class PersonalApiApplication {
 	@GetMapping("/hello")
 	fun hello(@RequestParam(value = "name", defaultValue = "World") name: String?): String? {
+		JsonSchemaGenerator().getWeatherSchema()
 		return String.format("Hello %s!", name)
 	}
 }
