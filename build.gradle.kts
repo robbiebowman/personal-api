@@ -1,15 +1,16 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	id("org.springframework.boot") version "2.6.3"
-	id("io.spring.dependency-management") version "1.0.11.RELEASE"
-	kotlin("jvm") version "1.6.10"
-	kotlin("plugin.spring") version "1.6.10"
+	id("org.springframework.boot") version "3.2.3"
+	id("io.spring.dependency-management") version "1.1.4"
+	kotlin("jvm") version "1.9.22"
+	kotlin("plugin.spring") version "1.9.22"
 }
 
 group = "com.robbiebowman"
 version = "0.0.1-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_11
+java.sourceCompatibility = JavaVersion.VERSION_17
+java.targetCompatibility = JavaVersion.VERSION_17
 
 repositories {
 	mavenCentral()
@@ -26,6 +27,7 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
 	implementation("com.github.robbiebowman:WordleSolver:v1.2")
+	implementation("com.github.robbiebowman:gpt-tools-annotations:0.0.3")
 
 	implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.2.0")
 
@@ -37,7 +39,6 @@ dependencies {
 	implementation("com.azure:azure-security-keyvault-secrets:4.6.0")
 	implementation("com.azure:azure-identity:1.8.1")
 
-
 	// Test
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
@@ -45,7 +46,7 @@ dependencies {
 tasks.withType<KotlinCompile> {
 	kotlinOptions {
 		freeCompilerArgs = listOf("-Xjsr305=strict")
-		jvmTarget = "11"
+		jvmTarget = "17"
 	}
 }
 
