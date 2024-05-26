@@ -23,9 +23,6 @@ import java.time.format.DateTimeFormatter
 class MiniCrosswordController {
 
     @Autowired
-    private lateinit var secretClient: SecretClient
-
-    @Autowired
     private lateinit var blobService: BlobStorageService
 
     @Value("\${azure_crossword_container_name}")
@@ -70,7 +67,7 @@ class MiniCrosswordController {
             .build()
         val req = ChatCompletionRequest
             .builder()
-            .model("gpt-4")
+            .model("gpt-4o")
             .functions(listOf(crosswordClueFunction))
             .functionCall(ChatCompletionRequest.ChatCompletionRequestFunctionCall("auto"))
             .messages(
