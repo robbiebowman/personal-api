@@ -31,10 +31,10 @@ class MiniCrosswordController {
     @Value("\${open_ai_api_key}")
     private val openApiKey: String? = null
 
-    private val maker = CrosswordMaker()
 
     @GetMapping("/mini-crossword")
     fun miniCrossword(): PuzzleWithClues {
+        val maker = CrosswordMaker()
         val dir = getCurrentDateDirectoryName()
         val puzzleFileName = "${dir}/puzzle.json"
         val cluesFileName = "${dir}/clues.json"
