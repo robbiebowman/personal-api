@@ -3,6 +3,7 @@ package com.robbiebowman.personalapi.config
 import com.azure.identity.ClientSecretCredentialBuilder
 import com.azure.security.keyvault.secrets.SecretClient
 import com.azure.security.keyvault.secrets.SecretClientBuilder
+import com.robbiebowman.personalapi.service.BlobStorageService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

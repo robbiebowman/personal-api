@@ -28,15 +28,17 @@ dependencies {
 
 	implementation("com.github.robbiebowman:WordleSolver:v1.2")
 	implementation("com.github.robbiebowman:gpt-tools-annotations:0.0.3")
+	implementation("com.github.robbiebowman:mini-crossword-maker:1.0.2")
 
 	implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.2.0")
 
 	implementation("com.slack.api:slack-api-client:1.28.1")
 	implementation("com.slack.api:bolt:1.28.1")
 
-	implementation("com.theokanning.openai-gpt3-java:service:0.11.1")
+	implementation("com.theokanning.openai-gpt3-java:service:0.18.2")
 
 	implementation("com.azure:azure-security-keyvault-secrets:4.6.0")
+	implementation("com.azure:azure-storage-blob:12.26.0")
 	implementation("com.azure:azure-identity:1.8.1")
 
 	// Test
