@@ -14,9 +14,11 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.client.HttpClientErrorException.BadRequest
 import java.time.Duration
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 
 @RestController
@@ -31,11 +33,13 @@ class MiniCrosswordController {
     @Value("\${open_ai_api_key}")
     private val openApiKey: String? = null
 
-
     @GetMapping("/mini-crossword")
-    fun miniCrossword(): PuzzleWithClues {
+    fun miniCrossword(
+        @RequestParam(value = "date") date: LocalDate = LocalDate.now(),
+    ): PuzzleWithClues {
+        if (!isWithinAcceptableDateRange(date)) throw Exception("Invalid date")
         val maker = CrosswordMaker()
-        val dir = getCurrentDateDirectoryName()
+        val dir = getCurrentDateDirectoryName(date)
         val puzzleFileName = "${dir}/puzzle.json"
         val cluesFileName = "${dir}/clues.json"
 
@@ -56,6 +60,11 @@ class MiniCrosswordController {
             }
 
         return PuzzleWithClues(clues, puzzle)
+    }
+
+    private fun isWithinAcceptableDateRange(date: LocalDate): Boolean {
+        return date.isBefore(LocalDate.now().plusDays(1))
+                && date.isAfter(LocalDate.now().minusDays(7))
     }
 
     private fun generateClues(puzzle: Puzzle): PuzzleClues {
@@ -94,9 +103,9 @@ class MiniCrosswordController {
     data class PuzzleClues(val clues: List<Clue>)
     data class Clue(val word: String, val clue: String)
 
-    private fun getCurrentDateDirectoryName(): String {
+    private fun getCurrentDateDirectoryName(date: LocalDate): String {
         val formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd")
-        return formatter.format(LocalDate.now())
+        return formatter.format(date)
     }
 }
 
@@ -108,5 +117,12 @@ fun handleNoSuchElementFoundException(
     return ResponseEntity
         .status(HttpStatus.NOT_FOUND)
         .body(exception.message)
+}
 
+@ExceptionHandler(Exception::class)
+@ResponseStatus(HttpStatus.BAD_REQUEST, code = HttpStatus.BAD_REQUEST)
+fun handleException(
+    exception: Exception
+): ResponseEntity<String?> {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.message)
 }
