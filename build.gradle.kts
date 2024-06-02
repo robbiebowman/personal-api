@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
 	// Spring
-	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-web:3.3.0")
 
 	// Libs
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -42,7 +42,7 @@ dependencies {
 	implementation("com.azure:azure-identity:1.8.1")
 
 	// Test
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-test:3.3.0")
 }
 
 tasks.withType<KotlinCompile> {
