@@ -33,6 +33,33 @@ class MiniCrosswordController {
     @Value("\${open_ai_api_key}")
     private val openApiKey: String? = null
 
+    @GetMapping("/mini-crossword/create")
+    fun createMiniCrossword(
+        @RequestParam(value = "date") date: LocalDate = LocalDate.now(),
+    ): PuzzleWithClues {
+        if (!isWithinAcceptableDateRange(date)) throw Exception("Invalid date")
+        val maker = CrosswordMaker()
+        val dir = getCurrentDateDirectoryName(date)
+        val puzzleFileName = "${dir}/puzzle.json"
+        val cluesFileName = "${dir}/clues.json"
+
+        val puzzle = maker.createCrossword().let { crossword ->
+                if (crossword == null) throw NoSuchElementException("Couldn't generate a puzzle")
+                val (acrossWords, downWords) = WordIsolator.getWords(crossword)
+                Puzzle(crossword, acrossWords, downWords)
+            }.also {
+                blobService.uploadToBlobStorage(containerName, puzzleFileName, it)
+            }
+
+        val clues = run {
+                val clues = generateClues(puzzle)
+                blobService.uploadToBlobStorage(containerName, cluesFileName, clues)
+                clues
+            }
+
+        return PuzzleWithClues(clues, puzzle)
+    }
+
     @GetMapping("/mini-crossword")
     fun miniCrossword(
         @RequestParam(value = "date") date: LocalDate = LocalDate.now(),
@@ -44,20 +71,11 @@ class MiniCrosswordController {
         val cluesFileName = "${dir}/clues.json"
 
         val puzzle = blobService.getFromBlobStorage(containerName, puzzleFileName, Puzzle::class.java)
-            ?: maker.createCrossword().let { crossword ->
-                if (crossword == null) throw NoSuchElementException("Couldn't generate a puzzle")
-                val (acrossWords, downWords) = WordIsolator.getWords(crossword)
-                Puzzle(crossword, acrossWords, downWords)
-            }.also {
-                blobService.uploadToBlobStorage(containerName, puzzleFileName, it)
-            }
-
         val clues = blobService.getFromBlobStorage(containerName, cluesFileName, PuzzleClues::class.java)
-            ?: run {
-                val clues = generateClues(puzzle)
-                blobService.uploadToBlobStorage(containerName, cluesFileName, clues)
-                clues
-            }
+
+        if (clues == null || puzzle == null) {
+            throw Exception("Puzzle doesn't exist!")
+        }
 
         return PuzzleWithClues(clues, puzzle)
     }
