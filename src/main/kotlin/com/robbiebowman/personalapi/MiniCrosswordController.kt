@@ -65,7 +65,6 @@ class MiniCrosswordController {
         @RequestParam(value = "date") date: LocalDate = LocalDate.now(),
     ): PuzzleWithClues {
         if (!isWithinAcceptableDateRange(date)) throw Exception("Invalid date")
-        val maker = CrosswordMaker()
         val dir = getCurrentDateDirectoryName(date)
         val puzzleFileName = "${dir}/puzzle.json"
         val cluesFileName = "${dir}/clues.json"
