@@ -81,7 +81,7 @@ class MiniCrosswordController {
     }
 
     private fun isWithinAcceptableDateRange(date: LocalDate): Boolean {
-        return date.isBefore(LocalDate.now().plusDays(2))
+        return date.isBefore(LocalDate.now().plusDays(5))
                 && date.isAfter(LocalDate.now().minusDays(7))
     }
 
