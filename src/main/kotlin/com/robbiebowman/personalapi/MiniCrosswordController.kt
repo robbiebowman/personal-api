@@ -1,9 +1,9 @@
 package com.robbiebowman.personalapi
 
-import com.azure.security.keyvault.secrets.SecretClient
 import com.robbiebowman.CrosswordMaker
 import com.robbiebowman.Puzzle
 import com.robbiebowman.WordIsolator
+import com.robbiebowman.claude.*
 import com.robbiebowman.personalapi.service.BlobStorageService
 import com.theokanning.openai.completion.chat.ChatCompletionRequest
 import com.theokanning.openai.completion.chat.ChatFunction
@@ -14,11 +14,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.client.HttpClientErrorException.BadRequest
 import java.time.Duration
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
+import kotlin.reflect.jvm.internal.impl.builtins.functions.FunctionTypeKind.KFunction
 
 
 @RestController
@@ -32,6 +31,9 @@ class MiniCrosswordController {
 
     @Value("\${open_ai_api_key}")
     private val openApiKey: String? = null
+
+    @Value("\${claude_api_key}")
+    private val claudeApiKey: String? = null
 
     @GetMapping("/mini-crossword/create")
     fun createMiniCrossword(
@@ -84,36 +86,31 @@ class MiniCrosswordController {
                 && date.isAfter(LocalDate.now().minusDays(7))
     }
 
+    private fun defineCrosswordClues(clues: PuzzleClues) {
+        TODO()
+    }
+
     private fun generateClues(puzzle: Puzzle): PuzzleClues {
-        val gpt = OpenAiService(openApiKey, Duration.ofSeconds(30))
-        val crosswordClueFunction = ChatFunction.builder()
-            .name("define_crossword_clues")
-            .description("")
-            .executor(PuzzleClues::class.java) {}
+        val claudeClient = ClaudeClientBuilder()
+            .withApiKey(claudeApiKey!!)
+            .withModel("claude-3-5-sonnet-20240620")
+            .withTool(::defineCrosswordClues)
+            .withSystemPrompt("Given a list of words from the user, create crossword clues for each. Try to make a challenging and fun set of clues.")
             .build()
-        val req = ChatCompletionRequest
-            .builder()
-            .model("gpt-4o")
-            .functions(listOf(crosswordClueFunction))
-            .functionCall(ChatCompletionRequest.ChatCompletionRequestFunctionCall("auto"))
-            .messages(
-                listOf(
-                    ChatMessage(
-                        "system",
-                        "Given a list of words from the user, create challenging crossword clues for each. The more common the word, the more difficult and cryptic the clue should be. Avoid clues about the word being within another word. Try to make a challenging and fun set of clues."
-                    ),
-                    ChatMessage("user", puzzle.acrossWords.plus(puzzle.downWords).joinToString { it.word })
+        val response = claudeClient.getChatCompletion(
+            listOf(
+                SerializableMessage(
+                    Role.User,
+                    listOf(
+                        MessageContent.TextContent(
+                            puzzle.acrossWords.plus(puzzle.downWords).joinToString { it.word })
+                    )
                 )
             )
-            .build()
-        val response = gpt.createChatCompletion(req)
-        val clues = response.choices.first().message.functionCall.arguments["clues"].map {
-            Clue(
-                it["word"].asText(),
-                it["clue"].asText()
-            )
-        }
-        return PuzzleClues(clues)
+        )
+        val toolUse = response.content.first { it is MessageContent.ToolUse } as MessageContent.ToolUse
+        val clues = claudeClient.derserializeToolUse(toolUse.input["clues"]!!, PuzzleClues::class.java)
+        return clues
     }
 
     data class PuzzleWithClues(val clues: PuzzleClues, val puzzle: Puzzle)
