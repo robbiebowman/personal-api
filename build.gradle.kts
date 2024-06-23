@@ -28,8 +28,8 @@ dependencies {
 
 	implementation("com.github.robbiebowman:WordleSolver:v1.2")
 	implementation("com.github.robbiebowman:gpt-tools-annotations:0.0.3")
-	implementation("com.github.robbiebowman:mini-crossword-maker:1.1.1")
 	implementation("com.robbiebowman:claude-sdk:0.0.3")
+	implementation("com.github.robbiebowman:mini-crossword-maker:1.1.2")
 
 	implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.2.0")
 
