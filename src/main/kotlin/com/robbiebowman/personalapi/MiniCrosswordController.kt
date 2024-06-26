@@ -95,7 +95,7 @@ class MiniCrosswordController {
             .withApiKey(claudeApiKey!!)
             .withModel("claude-3-5-sonnet-20240620")
             .withTool(::defineCrosswordClues)
-            .withSystemPrompt("Given a list of words from the user, create crossword clues for each. Try to make a challenging and fun set of clues.")
+            .withSystemPrompt("Given a list of words from the user, write creative and fun crossword clues for each. Avoid making overly simple or direct clues unless the word is obscure. The clues can be silly.")
             .build()
         val response = claudeClient.getChatCompletion(
             listOf(
