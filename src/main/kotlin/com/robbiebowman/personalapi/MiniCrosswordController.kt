@@ -1,5 +1,6 @@
 package com.robbiebowman.personalapi
 
+import com.robbiebowman.Crossword
 import com.robbiebowman.CrosswordMaker
 import com.robbiebowman.Puzzle
 import com.robbiebowman.WordIsolator
@@ -9,10 +10,15 @@ import com.theokanning.openai.completion.chat.ChatCompletionRequest
 import com.theokanning.openai.completion.chat.ChatFunction
 import com.theokanning.openai.completion.chat.ChatMessage
 import com.theokanning.openai.service.OpenAiService
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpEntity
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.*
 import java.time.Duration
 import java.time.LocalDate
@@ -79,6 +85,34 @@ class MiniCrosswordController {
         }
 
         return PuzzleWithClues(clues, puzzle)
+    }
+
+    @PostMapping("/mini-crossword/fill", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @ResponseBody
+    fun fillCrossword(@RequestBody puzzleGrid: List<List<String>>, response: HttpServletResponse): Map<String, Any> {
+        // Validate input
+        if (puzzleGrid.isEmpty() || puzzleGrid.any { it.isEmpty() }) {
+            response.status = HttpServletResponse.SC_BAD_REQUEST
+            return mapOf("error" to "Invalid puzzle grid")
+        }
+        val crossword = puzzleGrid.map { it.map { it.firstOrNull() ?: '.' }.toTypedArray() }.toTypedArray()
+        if (crossword.size > 5 || crossword.maxBy { it.size }.size > 5) {
+            response.status = HttpServletResponse.SC_BAD_REQUEST
+            return mapOf("error" to "Puzzle grid too large")
+        }
+        val maker = CrosswordMaker()
+        val filledCrossword = maker.createCrossword(
+            initialPuzzle = crossword
+        )
+        if (filledCrossword == null) {
+            response.status = HttpServletResponse.SC_NO_CONTENT
+            return mapOf("error" to "Couldn't find a solution to this puzzle")
+        }
+
+        return mapOf(
+            "status" to "success",
+            "filledPuzzle" to filledCrossword
+        )
     }
 
     private fun isWithinAcceptableDateRange(date: LocalDate): Boolean {
