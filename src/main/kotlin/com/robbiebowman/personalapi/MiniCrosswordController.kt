@@ -41,12 +41,13 @@ class MiniCrosswordController {
     @Value("\${claude_api_key}")
     private val claudeApiKey: String? = null
 
+    private val maker = CrosswordMaker()
+
     @GetMapping("/mini-crossword/create")
     fun createMiniCrossword(
         @RequestParam(value = "date") date: LocalDate = LocalDate.now(),
     ): PuzzleWithClues {
         if (!isWithinAcceptableDateRange(date)) throw Exception("Invalid date")
-        val maker = CrosswordMaker()
         val dir = getCurrentDateDirectoryName(date)
         val puzzleFileName = "${dir}/puzzle.json"
         val cluesFileName = "${dir}/clues.json"
@@ -100,7 +101,6 @@ class MiniCrosswordController {
             response.status = HttpServletResponse.SC_BAD_REQUEST
             return mapOf("error" to "Puzzle grid too large")
         }
-        val maker = CrosswordMaker()
         val filledCrossword = maker.createCrossword(
             initialPuzzle = crossword
         )
