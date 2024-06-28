@@ -96,7 +96,14 @@ class MiniCrosswordController {
             response.status = HttpServletResponse.SC_BAD_REQUEST
             return mapOf("error" to "Invalid puzzle grid")
         }
-        val crossword = puzzleGrid.map { it.map { it.firstOrNull() ?: '.' }.toTypedArray() }.toTypedArray()
+        val crossword = puzzleGrid.map { it.map { c ->
+            val res = when (c) {
+                "" -> '.'
+                "#" -> ' '
+                else -> c.first()
+            }
+            res
+        }.toTypedArray() }.toTypedArray()
         if (crossword.size > 5 || crossword.maxBy { it.size }.size > 5) {
             response.status = HttpServletResponse.SC_BAD_REQUEST
             return mapOf("error" to "Puzzle grid too large")
