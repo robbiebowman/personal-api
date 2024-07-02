@@ -53,18 +53,18 @@ class MiniCrosswordController {
         val cluesFileName = "${dir}/clues.json"
 
         val puzzle = maker.createCrossword().let { crossword ->
-                if (crossword == null) throw NoSuchElementException("Couldn't generate a puzzle")
-                val (acrossWords, downWords) = WordIsolator.getWords(crossword)
-                Puzzle(crossword, acrossWords, downWords)
-            }.also {
-                blobService.uploadToBlobStorage(containerName, puzzleFileName, it)
-            }
+            if (crossword == null) throw NoSuchElementException("Couldn't generate a puzzle")
+            val (acrossWords, downWords) = WordIsolator.getWords(crossword)
+            Puzzle(crossword, acrossWords, downWords)
+        }.also {
+            blobService.uploadToBlobStorage(containerName, puzzleFileName, it)
+        }
 
         val clues = run {
-                val clues = generateClues(puzzle)
-                blobService.uploadToBlobStorage(containerName, cluesFileName, clues)
-                clues
-            }
+            val clues = generateClues(puzzle.acrossWords.plus(puzzle.downWords).map { it.word })
+            blobService.uploadToBlobStorage(containerName, cluesFileName, clues)
+            clues
+        }
 
         return PuzzleWithClues(clues, puzzle)
     }
@@ -122,6 +122,17 @@ class MiniCrosswordController {
         )
     }
 
+    @PostMapping("/mini-crossword/fill-clues", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @ResponseBody
+    fun fillClues(@RequestBody words: List<String>, response: HttpServletResponse): Map<String, Any> {
+        // Validate input
+        val clues = generateClues(words)
+        return mapOf(
+            "status" to "success",
+            "clues" to clues.clues
+        )
+    }
+
     private fun isWithinAcceptableDateRange(date: LocalDate): Boolean {
         return date.isBefore(LocalDate.now().plusDays(5))
                 && date.isAfter(LocalDate.now().minusDays(7))
@@ -131,21 +142,18 @@ class MiniCrosswordController {
         TODO()
     }
 
-    private fun generateClues(puzzle: Puzzle): PuzzleClues {
+    private fun generateClues(words: List<String>): PuzzleClues {
         val claudeClient = ClaudeClientBuilder()
             .withApiKey(claudeApiKey!!)
             .withModel("claude-3-5-sonnet-20240620")
             .withTool(::defineCrosswordClues)
-            .withSystemPrompt("Given a list of words from the user, write creative and fun crossword clues for each. Avoid making overly simple or direct clues unless the word is obscure. The clues can be silly.")
+            .withSystemPrompt("Given a list of words from the user, write creative and fun crossword clues for each. Avoid making overly simple or direct clues unless the word is obscure. The clues can be silly. Be sure not to sure the word itself in the clue.")
             .build()
         val response = claudeClient.getChatCompletion(
             listOf(
                 SerializableMessage(
                     Role.User,
-                    listOf(
-                        MessageContent.TextContent(
-                            puzzle.acrossWords.plus(puzzle.downWords).joinToString { it.word })
-                    )
+                    listOf(MessageContent.TextContent(words.joinToString()))
                 )
             )
         )
