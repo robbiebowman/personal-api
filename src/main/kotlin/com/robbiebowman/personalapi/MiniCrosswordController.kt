@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*
 import java.time.Duration
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.random.Random
 import kotlin.reflect.jvm.internal.impl.builtins.functions.FunctionTypeKind.KFunction
 
 
@@ -130,6 +131,20 @@ class MiniCrosswordController {
         return mapOf(
             "status" to "success",
             "clues" to clues.clues
+        )
+    }
+
+    @PostMapping("/mini-crossword/create-custom", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @ResponseBody
+    fun createCustom(@RequestBody puzzleWithClues: PuzzleWithClues, response: HttpServletResponse): Map<String, Any> {
+        val puzzleId = ('a'..'z').shuffled().take(7).joinToString("")
+        val clues = puzzleWithClues.clues
+        val crossword = puzzleWithClues.puzzle
+        blobService.uploadToBlobStorage(containerName, "custom/$puzzleId/puzzle.json", crossword, overwrite = false)
+        blobService.uploadToBlobStorage(containerName, "custom/$puzzleId/clues.json", clues, overwrite = false)
+        return mapOf(
+            "status" to "success",
+            "puzzleId" to puzzleId
         )
     }
 

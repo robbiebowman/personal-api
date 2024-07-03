@@ -18,7 +18,7 @@ class BlobStorageService(
 
     private val gson = Gson()
 
-    fun <T> uploadToBlobStorage(containerName: String, blobName: String, thing: T) {
+    fun <T> uploadToBlobStorage(containerName: String, blobName: String, thing: T, overwrite: Boolean = true) {
         val json = gson.toJson(thing)
         val binaryData = BinaryData.fromBytes(json.toByteArray())
 
@@ -28,7 +28,7 @@ class BlobStorageService(
             .blobName(blobName)
             .buildClient()
 
-        blobClient.upload(binaryData, true)
+        blobClient.upload(binaryData, overwrite)
     }
 
     fun <T> getFromBlobStorage(containerName: String, blobName: String, clazz: Class<T>): T? {
