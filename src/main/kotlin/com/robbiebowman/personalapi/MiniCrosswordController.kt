@@ -58,16 +58,27 @@ class MiniCrosswordController {
             val (acrossWords, downWords) = WordIsolator.getWords(crossword)
             Puzzle(crossword, acrossWords, downWords)
         }.also {
-            blobService.uploadToBlobStorage(containerName, puzzleFileName, it)
+            uploadPuzzleToBlob(puzzleFileName, it)
         }
 
         val clues = run {
             val clues = generateClues(puzzle.acrossWords.plus(puzzle.downWords).map { it.word })
-            blobService.uploadToBlobStorage(containerName, cluesFileName, clues)
+            uploadCluesToBlob(cluesFileName, clues)
             clues
         }
 
         return PuzzleWithClues(clues, puzzle)
+    }
+
+    private fun uploadCluesToBlob(
+        cluesFileName: String,
+        clues: PuzzleClues
+    ) {
+        blobService.uploadToBlobStorage(containerName, cluesFileName, clues)
+    }
+
+    private fun uploadPuzzleToBlob(puzzleFileName: String, it: Puzzle) {
+        blobService.uploadToBlobStorage(containerName, puzzleFileName, it)
     }
 
     @GetMapping("/mini-crossword")
@@ -134,14 +145,25 @@ class MiniCrosswordController {
         )
     }
 
+    data class PuzzleCreateRequest(
+        val puzzle: Crossword,
+        val clues: List<ClueDefinition>
+    ) {
+        data class ClueDefinition(
+            val word: String,
+            val clue: String
+        )
+    }
+
     @PostMapping("/mini-crossword/create-custom", consumes = [MediaType.APPLICATION_JSON_VALUE])
     @ResponseBody
-    fun createCustom(@RequestBody puzzleWithClues: PuzzleWithClues, response: HttpServletResponse): Map<String, Any> {
+    fun createCustom(@RequestBody puzzleWithClues: PuzzleCreateRequest, response: HttpServletResponse): Map<String, Any> {
         val puzzleId = ('a'..'z').shuffled().take(7).joinToString("")
         val clues = puzzleWithClues.clues
         val crossword = puzzleWithClues.puzzle
-        blobService.uploadToBlobStorage(containerName, "custom/$puzzleId/puzzle.json", crossword, overwrite = false)
-        blobService.uploadToBlobStorage(containerName, "custom/$puzzleId/clues.json", clues, overwrite = false)
+        val words = WordIsolator.getWords(crossword)
+        uploadPuzzleToBlob("custom/$puzzleId/puzzle.json", Puzzle(crossword, words.first, words.second))
+        uploadCluesToBlob("custom/$puzzleId/clues.json", PuzzleClues(clues.map { Clue(it.word, it.clue) }))
         return mapOf(
             "status" to "success",
             "puzzleId" to puzzleId
