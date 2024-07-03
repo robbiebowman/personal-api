@@ -83,10 +83,17 @@ class MiniCrosswordController {
 
     @GetMapping("/mini-crossword")
     fun miniCrossword(
-        @RequestParam(value = "date") date: LocalDate = LocalDate.now(),
+        @RequestParam(value = "date") date: LocalDate? = null,
+        @RequestParam(value = "id") id: String? = null,
     ): PuzzleWithClues {
-        if (!isWithinAcceptableDateRange(date)) throw Exception("Invalid date")
-        val dir = getCurrentDateDirectoryName(date)
+        val dir = if (date != null) {
+            if (!isWithinAcceptableDateRange(date)) throw Exception("Invalid date")
+            getCurrentDateDirectoryName(date)
+        } else if (id != null) {
+            "custom/$id"
+        } else {
+            throw Exception("Puzzle doesn't exist!")
+        }
         val puzzleFileName = "${dir}/puzzle.json"
         val cluesFileName = "${dir}/clues.json"
 
