@@ -116,11 +116,7 @@ class MiniCrosswordController {
             return mapOf("error" to "Invalid puzzle grid")
         }
         val crossword = puzzleGrid.map { it.map { c ->
-            val res = when (c) {
-                "" -> '.'
-                "#" -> ' '
-                else -> c.first()
-            }
+            val res = mapApiChar(c)
             res
         }.toTypedArray() }.toTypedArray()
         if (crossword.size > 5 || crossword.maxBy { it.size }.size > 5) {
@@ -139,6 +135,12 @@ class MiniCrosswordController {
             "status" to "success",
             "filledPuzzle" to filledCrossword
         )
+    }
+
+    private fun mapApiChar(c: String) = when (c) {
+        "" -> '.'
+        "#" -> ' '
+        else -> c.first()
     }
 
     @PostMapping("/mini-crossword/fill-clues", consumes = [MediaType.APPLICATION_JSON_VALUE])
@@ -167,7 +169,7 @@ class MiniCrosswordController {
     fun createCustom(@RequestBody puzzleWithClues: PuzzleCreateRequest, response: HttpServletResponse): Map<String, Any> {
         val puzzleId = ('a'..'z').shuffled().take(7).joinToString("")
         val clues = puzzleWithClues.clues
-        val crossword = puzzleWithClues.puzzle
+        val crossword = puzzleWithClues.puzzle.map { it.map { mapApiChar(it.toString()) }.toTypedArray() }.toTypedArray()
         val words = WordIsolator.getWords(crossword)
         uploadPuzzleToBlob("custom/$puzzleId/puzzle.json", Puzzle(crossword, words.first, words.second))
         uploadCluesToBlob("custom/$puzzleId/clues.json", PuzzleClues(clues.map { Clue(it.word, it.clue) }))
