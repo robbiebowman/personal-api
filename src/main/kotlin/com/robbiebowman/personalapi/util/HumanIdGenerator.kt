@@ -8,7 +8,7 @@ object HumanIdGenerator {
     )
 
     fun createId(delimiter: String = "-", adjectiveCount: Int = 2): String {
-        return ((0..adjectiveCount).map { i -> adjectives.random() } + animals.random()).joinToString(delimiter)
+        return ((1..adjectiveCount).map { i -> adjectives.random() } + animals.random()).joinToString(delimiter)
     }
 
     val animals = setOf(
