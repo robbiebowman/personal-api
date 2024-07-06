@@ -6,6 +6,7 @@ import com.robbiebowman.Puzzle
 import com.robbiebowman.WordIsolator
 import com.robbiebowman.claude.*
 import com.robbiebowman.personalapi.service.BlobStorageService
+import com.robbiebowman.personalapi.util.HumanIdGenerator
 import com.theokanning.openai.completion.chat.ChatCompletionRequest
 import com.theokanning.openai.completion.chat.ChatFunction
 import com.theokanning.openai.completion.chat.ChatMessage
@@ -167,7 +168,7 @@ class MiniCrosswordController {
     @PostMapping("/mini-crossword/create-custom", consumes = [MediaType.APPLICATION_JSON_VALUE])
     @ResponseBody
     fun createCustom(@RequestBody puzzleWithClues: PuzzleCreateRequest, response: HttpServletResponse): Map<String, Any> {
-        val puzzleId = ('a'..'z').shuffled().take(7).joinToString("")
+        val puzzleId = HumanIdGenerator.createId()
         val clues = puzzleWithClues.clues
         val crossword = puzzleWithClues.puzzle.map { it.map { mapApiChar(it.toString()) }.toTypedArray() }.toTypedArray()
         val words = WordIsolator.getWords(crossword)
