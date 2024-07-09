@@ -4,28 +4,23 @@ import com.robbiebowman.Crossword
 import com.robbiebowman.CrosswordMaker
 import com.robbiebowman.Puzzle
 import com.robbiebowman.WordIsolator
-import com.robbiebowman.claude.*
+import com.robbiebowman.claude.ClaudeClientBuilder
+import com.robbiebowman.claude.MessageContent
+import com.robbiebowman.claude.Role
+import com.robbiebowman.claude.SerializableMessage
 import com.robbiebowman.personalapi.service.BlobStorageService
+import com.robbiebowman.personalapi.util.DateUtils.getCurrentDateDirectoryName
+import com.robbiebowman.personalapi.util.DateUtils.isWithinAcceptableDateRange
 import com.robbiebowman.personalapi.util.HumanIdGenerator
-import com.theokanning.openai.completion.chat.ChatCompletionRequest
-import com.theokanning.openai.completion.chat.ChatFunction
-import com.theokanning.openai.completion.chat.ChatMessage
-import com.theokanning.openai.service.OpenAiService
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpEntity
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.*
-import java.time.Duration
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import kotlin.random.Random
-import kotlin.reflect.jvm.internal.impl.builtins.functions.FunctionTypeKind.KFunction
 
 
 @RestController
@@ -180,11 +175,6 @@ class MiniCrosswordController {
         )
     }
 
-    private fun isWithinAcceptableDateRange(date: LocalDate): Boolean {
-        return date.isBefore(LocalDate.now().plusDays(5))
-                && date.isAfter(LocalDate.now().minusDays(7))
-    }
-
     private fun defineCrosswordClues(clues: PuzzleClues) {
         TODO()
     }
@@ -213,10 +203,6 @@ class MiniCrosswordController {
     data class PuzzleClues(val clues: List<Clue>)
     data class Clue(val word: String, val clue: String)
 
-    private fun getCurrentDateDirectoryName(date: LocalDate): String {
-        val formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd")
-        return formatter.format(date)
-    }
 }
 
 @ExceptionHandler(NoSuchElementException::class)

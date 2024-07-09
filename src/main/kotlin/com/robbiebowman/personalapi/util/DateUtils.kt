@@ -1,6 +1,8 @@
 package com.robbiebowman.personalapi.util
 
 import java.time.Duration
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -34,5 +36,14 @@ object DateUtils {
         val minutesStr = if (minutes == 0L) "" else if (minutes == 1L) "1 minute" else "$minutes minutes"
         val allParts = listOf(daysStr, hoursStr, minutesStr).filter { it.isNotBlank() }
         return allParts.joinToString(", ")
+    }
+
+    fun isWithinAcceptableDateRange(date: LocalDate): Boolean {
+        return date.isBefore(LocalDate.now().plusDays(5))
+                && date.isAfter(LocalDate.now().minusDays(7))
+    }
+    fun getCurrentDateDirectoryName(date: LocalDate): String {
+        val formatter = DateTimeFormatter.ofPattern("YYYY-MM-dd")
+        return formatter.format(date)
     }
 }
