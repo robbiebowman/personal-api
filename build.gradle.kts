@@ -30,7 +30,7 @@ dependencies {
 	implementation("com.github.robbiebowman:gpt-tools-annotations:0.0.3")
 	implementation("com.robbiebowman:claude-sdk:0.0.3")
 	implementation("com.github.robbiebowman:mini-crossword-maker:1.1.3")
-	implementation("com.github.robbiebowman:title-game:1.0.3")
+	implementation("com.github.robbiebowman:title-game:1.0.4")
 
 	implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.2.0")
 

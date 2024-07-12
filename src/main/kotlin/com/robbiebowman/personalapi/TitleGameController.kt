@@ -64,7 +64,7 @@ class TitleGameController {
 
 
     @GetMapping("/title-game/create")
-    fun createMiniCrossword(
+    fun createPretendFilm(
         @RequestParam(value = "date") date: LocalDate = LocalDate.now(),
     ): BlurbAndInfo {
         if (!isWithinAcceptableDateRange(date)) throw Exception("Invalid date")
