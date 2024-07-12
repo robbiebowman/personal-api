@@ -27,6 +27,21 @@ class TitleGameController {
     @Autowired
     private lateinit var blobService: BlobStorageService
 
+    private val customPrompt = """
+            You are a movie expert helping the user generate pretend film synopses. The user will provide two film titles:
+            a real title of an actual film, followed by that same film with one letter changed. Your job is to write
+            a very brief, new synopsis bearing in mind the changed title such that someone reading just the new blurb
+            could make a guess as to the new title.
+            
+            Make sure to include hints to the original film so the title is guessable. Don't talk explicitly about how
+            the new plot differs from the original. 
+                        
+            Make sure not to mention the new or original title, as the game will be someone trying to guess it based
+            on the new blurb.
+            
+            Keep the blurbs to 2 sentences max.
+        """.trimIndent()
+
     @GetMapping("/title-game")
     fun getGame(
         @RequestParam(value = "date") date: LocalDate? = null,
@@ -56,7 +71,7 @@ class TitleGameController {
         val dir = getCurrentDateDirectoryName(date)
         val fileName = "${dir}/film-info-and-blurb.json"
 
-        val generator = PretendFilmGenerator(claudeApiKey!!, openApiKey!!)
+        val generator = PretendFilmGenerator(claudeApiKey!!, openApiKey!!, customPrompt)
 
         val puzzle = generator.generatePretendFilm()
 
