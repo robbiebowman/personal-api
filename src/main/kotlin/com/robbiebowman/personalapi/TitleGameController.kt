@@ -33,7 +33,7 @@ class TitleGameController {
             a very brief, new synopsis bearing in mind the changed title such that someone reading just the new blurb
             could make a guess as to the new title.
             
-            Make sure to include subtle hints to the original film but remember you're describing the plot of
+            Make sure to include fun hints to the original film but remember you're describing the plot of
             a brand new film in a world where the original doesn't exist. Therefore don't talk explicitly about 
             how the new plot differs from the original.
                         
