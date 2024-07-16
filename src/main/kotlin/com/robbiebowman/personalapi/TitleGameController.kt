@@ -33,14 +33,15 @@ class TitleGameController {
             a very brief, new synopsis bearing in mind the changed title such that someone reading just the new blurb
             could make a guess as to the new title.
             
-            Make sure to include hints to the original film so the title is guessable. Don't talk explicitly about how
-            the new plot differs from the original. 
+            Make sure to include subtle hints to the original film but remember you're describing the plot of
+            a brand new film in a world where the original doesn't exist. Therefore don't talk explicitly about 
+            how the new plot differs from the original.
                         
             Make sure not to mention the new or original title, as the game will be someone trying to guess it based
-            on the new blurb.
+            on the new blurb. Exaggerate the elements of the plot relevant to the new title.
             
             Keep the blurbs to 2 sentences max.
-        """.trimIndent()
+            """.trimIndent()
 
     @GetMapping("/title-game")
     fun getGame(
