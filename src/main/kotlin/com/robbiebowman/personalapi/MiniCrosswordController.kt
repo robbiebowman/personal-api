@@ -176,7 +176,7 @@ class MiniCrosswordController {
     }
 
     private fun defineCrosswordClues(clues: PuzzleClues) {
-        TODO()
+        TODO("Just used as an interface for Claude")
     }
 
     private fun generateClues(words: List<String>): PuzzleClues {

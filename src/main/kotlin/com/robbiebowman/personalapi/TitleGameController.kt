@@ -74,7 +74,7 @@ class TitleGameController {
 
         val generator = PretendFilmGenerator(claudeApiKey!!, openApiKey!!, customPrompt)
 
-        val puzzle = generator.generatePretendFilm()
+        val puzzle = generator.generatePretendFilm(distance = 1)
 
         blobService.uploadToBlobStorage(containerName, fileName, puzzle)
 
