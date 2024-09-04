@@ -25,11 +25,12 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-
+	runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.9.0-RC.2")
 	implementation("com.github.robbiebowman:WordleSolver:v1.2")
 	implementation("com.github.robbiebowman:gpt-tools-annotations:0.0.3")
 	implementation("com.robbiebowman:claude-sdk:0.0.4")
 	implementation("com.github.robbiebowman:mini-crossword-maker:1.1.3")
+	implementation("com.github.robbiebowman:periodic-table-describer:0.0.2")
 	implementation("com.github.robbiebowman:title-game:1.0.6")
 
 	implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.2.0")
