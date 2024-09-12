@@ -50,27 +50,22 @@ class PeriodicTableController {
         this.asyncService = asyncService
     }
 
-    @PostMapping("/periodic-table", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
+    @PostMapping("/periodic-table", consumes = [MediaType.APPLICATION_JSON_VALUE])
     @ResponseBody
     suspend fun askPeriodicTable(
-        @RequestParam params: MultiValueMap<String, String>,
         httpRequest: HttpServletRequest,
-        httpEntity: HttpEntity<String>,
         response: HttpServletResponse
     ) {
-        val query = params["query"]!!.single()
-        val rangeMin = params["rangeMin"]?.singleOrNull()?.toInt()
-        val rangeMax = params["rangeMax"]?.singleOrNull()?.toInt()
-        val categories = params["categories"] ?: emptyList()
+        val requestBody = httpRequest.reader.readText()
+        val definition = gson.fromJson(requestBody, TableDefinition::class.java)
 
-        val periodicTableDescription = if (categories.isEmpty() && rangeMin == null) {
-            describer.value.askOpenQuestionOfElements(query)
-        } else if (categories.isEmpty()) {
-            describer.value.rateElements(query, rangeMin!!, rangeMax!!)
+        val periodicTableDescription = if (definition.categories.isEmpty() && definition.rangeMin == null) {
+            describer.value.askOpenQuestionOfElements(definition.query)
+        } else if (definition.categories.isEmpty()) {
+            describer.value.rateElements(definition.query, definition.rangeMin!!.value, definition.rangeMax!!.value)
         } else {
-            describer.value.categoriseElements(query, categories)
+            describer.value.categoriseElements(definition.query, definition.categories.map { it.name })
         }
-
 
         response.status = HttpStatus.OK.value()
         response.contentType = "application/json"
@@ -82,10 +77,7 @@ class PeriodicTableController {
                 containerName = containerName,
                 blobName = UUID.randomUUID().toString(),
                 thing = CompletePeriodicTableQuestion(
-                    query = query,
-                    rangeMin = rangeMin,
-                    rangeMax = rangeMax,
-                    categories = categories,
+                    definition = definition,
                     description = periodicTableDescription
                 )
             )
@@ -111,10 +103,24 @@ class PeriodicTableController {
 
 }
 
-data class CompletePeriodicTableQuestion(
+data class CategoryDefinition(
+    val name: String,
+    val hexColour: String
+)
+
+data class RangeDefinition(
+    val value: Int,
+    val hexColour: String
+)
+
+data class TableDefinition(
     val query: String,
-    val rangeMin: Int?,
-    val rangeMax: Int?,
-    val categories: List<String>,
+    val rangeMin: RangeDefinition?,
+    val rangeMax: RangeDefinition?,
+    val categories: List<CategoryDefinition>,
+)
+
+data class CompletePeriodicTableQuestion(
+    val definition: TableDefinition,
     val description: ElementDescriber.PeriodicTableDescription
 )
