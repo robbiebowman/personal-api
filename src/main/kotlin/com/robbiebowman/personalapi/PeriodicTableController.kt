@@ -2,30 +2,16 @@ package com.robbiebowman.personalapi
 
 import com.google.gson.Gson
 import com.robbiebowman.*
-import com.robbiebowman.claude.ClaudeClientBuilder
-import com.robbiebowman.claude.MessageContent
-import com.robbiebowman.claude.Role
-import com.robbiebowman.claude.SerializableMessage
 import com.robbiebowman.personalapi.service.AsyncService
 import com.robbiebowman.personalapi.service.BlobStorageService
-import com.robbiebowman.personalapi.util.DateUtils
-import com.robbiebowman.personalapi.util.DateUtils.getCurrentDateDirectoryName
-import com.robbiebowman.personalapi.util.DateUtils.isWithinAcceptableDateRange
-import com.robbiebowman.personalapi.util.HumanIdGenerator
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpEntity
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
-import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.*
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.*
-import kotlin.NoSuchElementException
 
 
 @RestController
@@ -53,8 +39,7 @@ class PeriodicTableController {
     @PostMapping("/periodic-table", consumes = [MediaType.APPLICATION_JSON_VALUE])
     @ResponseBody
     suspend fun askPeriodicTable(
-        httpRequest: HttpServletRequest,
-        response: HttpServletResponse
+        httpRequest: HttpServletRequest, response: HttpServletResponse
     ) {
         val requestBody = httpRequest.reader.readText()
         val definition = gson.fromJson(requestBody, TableDefinition::class.java)
@@ -67,21 +52,33 @@ class PeriodicTableController {
             describer.value.categoriseElements(definition.query, definition.categories.map { it.name })
         }
 
+        val periodicTableQuestion = CompletePeriodicTableQuestion(
+            definition = definition, description = periodicTableDescription
+        )
+        val id = UUID.randomUUID().toString()
+        blobService.uploadToBlobStorage(
+            containerName = containerName, blobName = id, thing = periodicTableQuestion
+        )
+        addToIndex(id, periodicTableQuestion)
+
         response.status = HttpStatus.OK.value()
         response.contentType = "application/json"
         response.writer.write(gson.toJson(periodicTableDescription))
         response.writer.flush()
+    }
 
-        asyncService.process {
-            blobService.uploadToBlobStorage(
-                containerName = containerName,
-                blobName = UUID.randomUUID().toString(),
-                thing = CompletePeriodicTableQuestion(
-                    definition = definition,
-                    description = periodicTableDescription
-                )
+    private fun addToIndex(id: String, periodicTableQuestion: CompletePeriodicTableQuestion) {
+        val existingIndex = blobService.getFromBlobStorage(
+            containerName, "index", FileIndex::class.java
+        )
+        val newIndex = FileIndex(
+            entries = existingIndex!!.entries + IndexEntry(
+                id = id,
+                type = getQuestionType(periodicTableQuestion),
+                query = periodicTableQuestion.definition.query
             )
-        }
+        )
+        blobService.uploadToBlobStorage(containerName, "index", newIndex)
     }
 
     @GetMapping("/periodic-table")
@@ -89,9 +86,7 @@ class PeriodicTableController {
         @RequestParam(value = "id") id: String? = null,
     ): CompletePeriodicTableQuestion {
         val puzzle = blobService.getFromBlobStorage(
-            containerName,
-            id!!,
-            CompletePeriodicTableQuestion::class.java
+            containerName, id!!, CompletePeriodicTableQuestion::class.java
         )
 
         if (puzzle == null) {
@@ -101,16 +96,51 @@ class PeriodicTableController {
         return puzzle
     }
 
+    @PostMapping("/periodic-table/refresh-index")
+    fun refreshIndex(
+    ) {
+        val existingFileNames = blobService.getAllFileNamesInContainer(containerName).filter {
+            try {
+                UUID.fromString(it)
+                true
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        val existingFiles = existingFileNames.mapNotNull { id ->
+            blobService.getFromBlobStorage(
+                containerName, id, CompletePeriodicTableQuestion::class.java
+            )?.let { id to it }
+        }.map { (id, definition) ->
+            val type = getQuestionType(definition)
+            IndexEntry(
+                id = id,
+                type = type,
+                query = definition.definition.query,
+            )
+        }
+
+        blobService.uploadToBlobStorage(containerName, "index", FileIndex(existingFiles))
+    }
+
+    private fun getQuestionType(definition: CompletePeriodicTableQuestion) =
+        if (definition.definition.categories.isNotEmpty()) {
+            QuestionType.Category
+        } else if (definition.definition.rangeMax != null) {
+            QuestionType.Range
+        } else {
+            QuestionType.OpenQuestion
+        }
+
 }
 
 data class CategoryDefinition(
-    val name: String,
-    val hexColour: String
+    val name: String, val hexColour: String
 )
 
 data class RangeDefinition(
-    val value: Int,
-    val hexColour: String
+    val value: Int, val hexColour: String
 )
 
 data class TableDefinition(
@@ -121,6 +151,17 @@ data class TableDefinition(
 )
 
 data class CompletePeriodicTableQuestion(
-    val definition: TableDefinition,
-    val description: ElementDescriber.PeriodicTableDescription
+    val definition: TableDefinition, val description: ElementDescriber.PeriodicTableDescription
 )
+
+data class FileIndex(
+    val entries: List<IndexEntry>
+)
+
+data class IndexEntry(
+    val id: String, val type: QuestionType, val query: String
+)
+
+enum class QuestionType {
+    OpenQuestion, Range, Category
+}

@@ -2,16 +2,15 @@ package com.robbiebowman.personalapi.service
 
 import com.azure.core.util.BinaryData
 import com.azure.storage.blob.BlobClientBuilder
+import com.azure.storage.blob.BlobContainerClientBuilder
 import com.azure.storage.blob.models.BlobErrorCode
 import com.azure.storage.blob.models.BlobStorageException
 import com.google.gson.Gson
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class BlobStorageService(
-) {
+class BlobStorageService {
 
     @Value("\${azure_blob_connection_string}")
     private val connectionString: String? = null
@@ -47,4 +46,14 @@ class BlobStorageService(
         }
     }
 
+    fun getAllFileNamesInContainer(containerName: String): List<String> {
+        val containerClient = BlobContainerClientBuilder()
+            .connectionString(connectionString)
+            .containerName(containerName)
+            .buildClient()
+
+        return containerClient.listBlobs()
+            .map { it.name }
+            .toList()
+    }
 }
