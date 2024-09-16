@@ -81,12 +81,12 @@ class PeriodicTableController {
         blobService.uploadToBlobStorage(containerName, "index", newIndex)
     }
 
-    @GetMapping("/periodic-table")
+    @GetMapping("/periodic-table/{id}")
     fun getPeriodicTable(
-        @RequestParam(value = "id") id: String? = null,
+        @PathVariable id: String
     ): CompletePeriodicTableQuestion {
         val puzzle = blobService.getFromBlobStorage(
-            containerName, id!!, CompletePeriodicTableQuestion::class.java
+            containerName, id, CompletePeriodicTableQuestion::class.java
         )
 
         if (puzzle == null) {
@@ -94,6 +94,13 @@ class PeriodicTableController {
         }
 
         return puzzle
+    }
+
+    @GetMapping("/periodic-table")
+    fun getIndex(): FileIndex {
+        return blobService.getFromBlobStorage(
+            containerName, "index", FileIndex::class.java
+        )!!
     }
 
     @PostMapping("/periodic-table/refresh-index")
