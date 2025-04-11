@@ -25,13 +25,10 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-
       - name: Build with Gradle
         run: ./gradlew bootJar
-
-      - name: Deploy to Azure App Service
-        uses: azure/webapps-deploy@v3
+      - uses: azure/webapps-deploy@v1
         with:
           app-name: spring-petclinic
-          publish-profile: ${{ secrets.azureWebAppPublishProfile }}
+          publish-profile: ${{ secrets.azureWebAppPublishProfile }} # See https://github.com/Azure/actions-workflow-samples/tree/master/AppService
           package: '${{ github.workspace }}/build/libs/*.jar'
