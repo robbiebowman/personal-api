@@ -9,22 +9,29 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
+
       - name: Set up JDK 17
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4
         with:
-          java-version: 17
-      - name: Cache Maven archetypes
-        uses: actions/cache@v1
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+
       - name: Build with Gradle
         run: ./gradlew bootJar
-      - uses: azure/webapps-deploy@v1
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
         with:
           app-name: spring-petclinic
-          publish-profile: ${{ secrets.azureWebAppPublishProfile }} # See https://github.com/Azure/actions-workflow-samples/tree/master/AppService
+          publish-profile: ${{ secrets.azureWebAppPublishProfile }}
           package: '${{ github.workspace }}/build/libs/*.jar'
