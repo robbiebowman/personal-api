@@ -28,10 +28,10 @@ import kotlin.math.abs
 class SlackSummaryService {
 
     // GPT engine info
-    private val gptEngine = "gpt-3.5-turbo-16k"
+    private val gptEngine = "gpt-6-luna"
     private val maxTokens = 16_000
     private val maxLengthExplanation =
-        "This may be due to the high length of the conversation. Rest assured the forthcoming edition of GPT will increase the max length 8 fold. "
+        "This may be due to the length of the conversation. "
 
     @Value("\${open_ai_api_key}")
     private val openApiKey: String? = null

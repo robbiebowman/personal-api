@@ -9,6 +9,7 @@ import com.robbiebowman.claude.MessageContent
 import com.robbiebowman.claude.Role
 import com.robbiebowman.claude.SerializableMessage
 import com.robbiebowman.personalapi.service.BlobStorageService
+import com.robbiebowman.personalapi.util.claudeMapper
 import com.robbiebowman.personalapi.util.DateUtils.getCurrentDateDirectoryName
 import com.robbiebowman.personalapi.util.DateUtils.isWithinAcceptableDateRange
 import com.robbiebowman.personalapi.util.HumanIdGenerator
@@ -31,9 +32,6 @@ class MiniCrosswordController {
 
     @Value("\${azure_crossword_container_name}")
     private lateinit var containerName: String
-
-    @Value("\${open_ai_api_key}")
-    private val openApiKey: String? = null
 
     @Value("\${claude_api_key}")
     private val claudeApiKey: String? = null
@@ -182,9 +180,11 @@ class MiniCrosswordController {
     private fun generateClues(words: List<String>): PuzzleClues {
         val claudeClient = ClaudeClientBuilder()
             .withApiKey(claudeApiKey!!)
-            .withModel("claude-opus-4-5")
+            .withModel("claude-opus-5-5")
+            .withMaxTokens(8192)
+            .withMapper(claudeMapper())
             .withTool(::defineCrosswordClues)
-            .withSystemPrompt("Given a list of words from the user, write creative and fun crossword clues for each. Avoid making overly simple or direct clues unless the word is obscure. The clues can be silly. Be sure not to sure the word itself in the clue.")
+            .withSystemPrompt("Given a list of words from the user, write creative and fun crossword clues for each. Avoid making overly simple or direct clues unless the word is obscure. The clues can be silly. Be sure not to use the word itself in the clue. Return the clues by calling defineCrosswordClues.")
             .build()
         val response = claudeClient.getChatCompletion(
             listOf(
