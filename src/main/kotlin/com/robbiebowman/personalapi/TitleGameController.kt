@@ -5,6 +5,7 @@ import com.robbiebowman.com.robbiebowman.PretendFilmGenerator
 import com.robbiebowman.personalapi.service.BlobStorageService
 import com.robbiebowman.personalapi.util.DateUtils.getCurrentDateDirectoryName
 import com.robbiebowman.personalapi.util.DateUtils.isWithinAcceptableDateRange
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -15,6 +16,8 @@ import java.time.LocalDate
 
 @RestController
 class TitleGameController {
+
+    private val logger = LoggerFactory.getLogger(TitleGameController::class.java)
 
     @Value("\${open_ai_api_key}")
     private val openApiKey: String? = null
@@ -71,9 +74,18 @@ class TitleGameController {
         val dir = getCurrentDateDirectoryName(date)
         val fileName = "${dir}/film-info-and-blurb.json"
 
-        val generator = PretendFilmGenerator(claudeApiKey!!, openApiKey!!, customPrompt)
-
-        val puzzle = generator.generatePretendFilm(distance = 1)
+        val puzzle = try {
+            PretendFilmGenerator(claudeApiKey!!, openApiKey!!, customPrompt).generatePretendFilm(distance = 1)
+        } catch (e: Exception) {
+            val origin = e.stackTrace.firstOrNull { it.className.startsWith("com.robbiebowman") }
+            logger.error(
+                "Title game generation failed before blob upload: exception={}, cause={}, origin={}",
+                e.javaClass.name,
+                e.cause?.javaClass?.name,
+                origin?.let { "${it.className}.${it.methodName}" }
+            )
+            throw e
+        }
 
         blobService.uploadToBlobStorage(containerName, fileName, puzzle)
 
