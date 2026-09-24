@@ -180,8 +180,8 @@ class MiniCrosswordController {
     private fun generateClues(words: List<String>): PuzzleClues {
         val claudeClient = ClaudeClientBuilder()
             .withApiKey(claudeApiKey!!)
-            .withModel("claude-sonnet-5")
-            .withMaxTokens(4096)
+            .withModel("claude-opus-5-5")
+            .withMaxTokens(8192)
             .withMapper(claudeMapper())
             .withTool(::defineCrosswordClues)
             .withSystemPrompt("Given a list of words from the user, write creative and fun crossword clues for each. Avoid making overly simple or direct clues unless the word is obscure. The clues can be silly. Be sure not to use the word itself in the clue. Return the clues by calling defineCrosswordClues.")

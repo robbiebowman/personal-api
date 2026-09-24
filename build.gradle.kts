@@ -33,7 +33,7 @@ dependencies {
 	implementation("com.github.robbiebowman:mini-crossword-maker:1.1.3")
 	// Pin the generator changes until both libraries have release tags.
 	implementation("com.github.robbiebowman:periodic-table-describer:297fb3b")
-	implementation("com.github.robbiebowman:title-game:3605a56")
+	implementation("com.github.robbiebowman:title-game:41123bd")
 
 	implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.2.0")
 

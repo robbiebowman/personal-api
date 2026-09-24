@@ -14,7 +14,7 @@ fun claudeMapper(): ObjectMapper = jacksonObjectMapper()
     .setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
     .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-    // Claude Sonnet 5 may return thinking blocks, which this older SDK does not model.
+    // New Claude models may return thinking blocks, which this older SDK does not model.
     .disable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE)
     .addMixIn(JsonSchema::class.java, IgnoreRequiredFieldFilter::class.java)
     .setFilterProvider(IgnoreRequiredFieldFilter.provider)
