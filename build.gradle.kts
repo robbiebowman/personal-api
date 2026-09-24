@@ -23,6 +23,7 @@ dependencies {
 
 	// Libs
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("com.fasterxml.jackson.module:jackson-module-jsonSchema:2.16.2")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.9.0-RC.2")
@@ -30,8 +31,9 @@ dependencies {
 	implementation("com.github.robbiebowman:gpt-tools-annotations:0.0.3")
 	implementation("com.robbiebowman:claude-sdk:0.0.4")
 	implementation("com.github.robbiebowman:mini-crossword-maker:1.1.3")
-	implementation("com.github.robbiebowman:periodic-table-describer:0.0.3")
-	implementation("com.github.robbiebowman:title-game:1.0.7")
+	// Pin the generator changes until both libraries have release tags.
+	implementation("com.github.robbiebowman:periodic-table-describer:297fb3b")
+	implementation("com.github.robbiebowman:title-game:3605a56")
 
 	implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.2.0")
 
