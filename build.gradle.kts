@@ -30,7 +30,7 @@ dependencies {
 	implementation("com.github.robbiebowman:WordleSolver:v1.2")
 	implementation("com.github.robbiebowman:gpt-tools-annotations:0.0.3")
 	implementation("com.robbiebowman:claude-sdk:0.0.4")
-	implementation("com.github.robbiebowman:mini-crossword-maker:1.1.3")
+	implementation("com.github.robbiebowman:mini-crossword-maker:1.2.0")
 	// Pin the generator changes until both libraries have release tags.
 	implementation("com.github.robbiebowman:periodic-table-describer:297fb3b")
 	implementation("com.github.robbiebowman:title-game:41123bd")

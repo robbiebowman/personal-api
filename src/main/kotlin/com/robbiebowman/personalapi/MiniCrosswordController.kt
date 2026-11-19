@@ -117,9 +117,13 @@ class MiniCrosswordController {
             response.status = HttpServletResponse.SC_BAD_REQUEST
             return mapOf("error" to "Puzzle grid too large")
         }
-        val filledCrossword = maker.createCrossword(
-            initialPuzzle = crossword
-        )
+        val filledCrossword = try {
+            maker.createCrossword(initialPuzzle = crossword)
+        } catch (e: IllegalArgumentException) {
+            // Ragged rows or unsupported characters
+            response.status = HttpServletResponse.SC_BAD_REQUEST
+            return mapOf("error" to (e.message ?: "Invalid puzzle grid"))
+        }
         if (filledCrossword == null) {
             response.status = HttpServletResponse.SC_NO_CONTENT
             return mapOf("error" to "Couldn't find a solution to this puzzle")
